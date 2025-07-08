@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 void main() {
   runApp(const MyApp());
@@ -7,116 +8,235 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Orbiting Nav App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0D1B2A),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const OrbitingNavApp(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+// --- The Single Creative Navigation Class ---
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class OrbitingNavApp extends StatefulWidget {
+  const OrbitingNavApp({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<OrbitingNavApp> createState() => _OrbitingNavAppState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _OrbitingNavAppState extends State<OrbitingNavApp> {
+  // STATE
+  int _currentIndex = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  // Each map represents a "page" or a "planet" in our system.
+  final List<Map<String, dynamic>> _pages = [
+    {
+      'title': 'Dashboard',
+      'icon': Icons.dashboard_rounded,
+      'color': Colors.redAccent,
+    },
+    {
+      'title': 'Explore',
+      'icon': Icons.explore_rounded,
+      'color': Colors.greenAccent,
+    },
+    {
+      'title': 'Mail',
+      'icon': Icons.mail_rounded,
+      'color': Colors.lightBlueAccent,
+    },
+    {
+      'title': 'Profile',
+      'icon': Icons.person_rounded,
+      'color': Colors.orangeAccent,
+    },
+    {
+      'title': 'Cloud',
+      'icon': Icons.cloud_upload_rounded,
+      'color': Colors.purpleAccent,
+    },
+  ];
+
+  // CONFIGURATION
+  static const double _orbitRadius = 120.0;
+  static const double _sunSize = 100.0;
+  static const double _planetSize = 50.0;
+  final Duration _animationDuration = const Duration(milliseconds: 500);
+
+  // This helper builds the planet/sun widgets.
+  Widget _buildPlanet(int index, bool isSelected) {
+    final page = _pages[index];
+    final size = isSelected ? _sunSize : _planetSize;
+
+    return GestureDetector(
+      onTap: () {
+        // When tapped, it becomes the new sun.
+        if (!isSelected) {
+          setState(() {
+            _currentIndex = index;
+          });
+        }
+      },
+      child: AnimatedContainer(
+        duration: _animationDuration,
+        curve: Curves.easeInOut,
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: page['color'],
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: page['color'].withOpacity(0.5),
+              blurRadius: isSelected ? 20 : 8,
+              spreadRadius: isSelected ? 3 : 1,
+            ),
+          ],
+        ),
+        child: Icon(
+          page['icon'],
+          color: Colors.white,
+          size: isSelected ? 40 : 24,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Orbital Navigator'),
+        centerTitle: true,
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // This is the main interactive navigation area.
+            Container(
+              width: double.infinity,
+              height: 350,
+              // Stack allows us to layer the orbit path and the planets.
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // 1. The Orbit Path (drawn with a CustomPainter)
+                  CustomPaint(
+                    size: const Size.square(_orbitRadius * 2.2),
+                    painter: OrbitPainter(),
+                  ),
+
+                  // 2. The Planets and the Sun
+                  ...List.generate(_pages.length, (index) {
+                    final bool isSelected = index == _currentIndex;
+
+                    // Planets are positioned on a circle using trigonometry.
+                    // The "sun" (selected item) stays in the center.
+                    final angle = (index / _pages.length) * 2 * math.pi;
+                    final alignment = isSelected
+                        ? Alignment.center
+                        : Alignment(math.cos(angle), math.sin(angle));
+
+                    return AnimatedAlign(
+                      duration: _animationDuration,
+                      curve: Curves.easeInOutQuint,
+                      alignment: alignment,
+                      child: _buildPlanet(index, isSelected),
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+            // This is the content area for the selected page.
+            Column(
+              children: [
+                // AnimatedSwitcher provides a nice cross-fade for the title.
+                AnimatedSwitcher(
+                  duration: _animationDuration,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.5),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    // Important: Use a key to tell the switcher the widget is new.
+                    _pages[_currentIndex]['title'],
+                    key: ValueKey<int>(_currentIndex),
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Tap a planet to navigate',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.6),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+// --- A small helper painter class for the dotted orbit line ---
+// Kept in the same file to adhere to the single-file spirit.
+
+class OrbitPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final path = Path();
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // Draw a dashed circle
+    const double dashWidth = 10.0;
+    const double dashSpace = 8.0;
+    double startAngle = 0;
+    final circumference = 2 * math.pi * radius;
+    final totalDashes = (circumference / (dashWidth + dashSpace)).floor();
+
+    for (int i = 0; i < totalDashes; i++) {
+      final start = startAngle + i * (dashWidth + dashSpace) / radius;
+      final sweep = dashWidth / radius;
+      path.addArc(Rect.fromCircle(center: center, radius: radius), start, sweep);
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
