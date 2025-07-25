@@ -142,6 +142,8 @@ class TaskCard extends StatelessWidget {
       case TaskStatus.completed:
         color = Colors.green;
         break;
+      case TaskStatus.all:
+        color = Colors.grey;
       default:
         color = Colors.grey;
     }
@@ -172,6 +174,10 @@ class TaskCard extends StatelessWidget {
       case TaskStatus.completed:
         backgroundColor = Colors.green.shade100;
         textColor = Colors.green.shade800;
+        break;
+      case TaskStatus.all:
+        backgroundColor = Colors.grey.shade100;
+        textColor = Colors.grey.shade800;
         break;
       default:
         backgroundColor = Colors.grey.shade100;
@@ -211,6 +217,10 @@ class TaskCard extends StatelessWidget {
       case TaskStatus.completed:
         icon = Icons.check_circle;
         color = Colors.green;
+        break;
+      case TaskStatus.all:
+        icon = Icons.list;
+        color = Colors.grey;
         break;
       default:
         icon = Icons.more_horiz;
