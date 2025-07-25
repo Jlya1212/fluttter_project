@@ -1,4 +1,4 @@
-enum TaskStatus { pending, inProgress, completed, failed }
+enum TaskStatus { pending, inProgress, completed,  all }
 
 class Task {
   final String taskCode;           // Unique code for the task

@@ -32,6 +32,62 @@ class MockTaskRepository implements TaskRepository {
       confirmationPhoto: null,
       confirmationSign: null,
     ),
+    
+      Task(
+        taskCode: 'TSK001',
+        fromLocation: 'Main Warehouse',
+        toLocation: 'Customer Location A',
+        itemDescription: 'Brake Pads Set',
+        itemCount: 2,
+        startTime: DateTime(2024, 12, 29, 8, 0),
+        deadline: DateTime(2024, 12, 29, 10, 0),
+        status: TaskStatus.pending,
+        ownerId: 'AutoFix Workshop',
+      ),
+      Task(
+        taskCode: 'TSK002',
+        fromLocation: 'Parts Center',
+        toLocation: 'Honda Service Center',
+        itemDescription: '2019 Honda Civic',
+        itemCount: 1,
+        startTime: DateTime(2024, 12, 29, 9, 30),
+        deadline: DateTime(2024, 12, 29, 12, 0),
+        status: TaskStatus.inProgress,
+        ownerId: 'Mike Rodriguez',
+      ),
+      Task(
+        taskCode: 'TSK003',
+        fromLocation: 'Service Station',
+        toLocation: 'Client Garage',
+        itemDescription: 'Transmission Fluid',
+        itemCount: 4,
+        startTime: DateTime(2024, 12, 29, 11, 15),
+        deadline: DateTime(2024, 12, 29, 14, 0),
+        status: TaskStatus.completed,
+        ownerId: 'Sarah Johnson',
+      ),
+      Task(
+        taskCode: 'TSK004',
+        fromLocation: 'Auto Parts Store',
+        toLocation: 'Quick Fix Garage',
+        itemDescription: 'Oil Filter Set',
+        itemCount: 6,
+        startTime: DateTime(2024, 12, 29, 13, 45),
+        deadline: DateTime(2024, 12, 29, 16, 30),
+        status: TaskStatus.completed,
+        ownerId: 'Tom Wilson',
+      ),
+      Task(
+        taskCode: 'TSK005',
+        fromLocation: 'Central Depot',
+        toLocation: 'Ford Dealership',
+        itemDescription: '2018 Ford F-150',
+        itemCount: 1,
+        startTime: DateTime(2024, 12, 29, 15, 20),
+        deadline: DateTime(2024, 12, 29, 18, 0),
+        status: TaskStatus.inProgress,
+        ownerId: 'Lisa Chen',
+      ),
   ];
 
   // 2. This method filters tasks by their status
@@ -39,8 +95,12 @@ class MockTaskRepository implements TaskRepository {
   Future<Result<List<Task>>> getTasksByStatus(TaskStatus status) async {
     try {
       await Future.delayed(Duration(milliseconds: 200));
-      final filtered = _tasks.where((task) => task.status == status).toList();
-      return Result.success(filtered);
+      if (status == TaskStatus.all) {
+        return Result.success(_tasks);
+      } else {
+        final filtered = _tasks.where((task) => task.status == status).toList();
+        return Result.success(filtered);
+      }
     } catch (e) {
       return Result.failure('Failed to fetch tasks: ${e.toString()}');
     }
@@ -86,4 +146,5 @@ class MockTaskRepository implements TaskRepository {
       return Result.failure('Failed to delete task: ${e.toString()}');
     }
   }
+
 }
