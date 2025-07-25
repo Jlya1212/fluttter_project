@@ -13,6 +13,7 @@ class Task {
   final String? confirmationPhoto; // URL or path to a completion photo
   final String? confirmationSign;  // URL or path to a signature image
 
+  // can 
   Task({
     required this.taskCode,
     required this.fromLocation,
@@ -60,5 +61,5 @@ class Task {
     };
   }
 
-  
+
 }
