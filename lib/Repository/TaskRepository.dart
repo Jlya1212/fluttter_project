@@ -1,6 +1,10 @@
 // Define the base interface
 import '../models/task.dart';
+import '../common/Result.dart';
 
 abstract class TaskRepository {
-  Future<List<Task>> getTasksByStatus(TaskStatus status);
+  Future<Result<List<Task>>> getTasksByStatus(TaskStatus status); // ✅ change this
+  Future<Result<Task>> addTask(Task task);
+  Future<Result<Task>> updateTask(Task task);
+  Future<Result<Task>> deleteTask(String taskCode);
 }
