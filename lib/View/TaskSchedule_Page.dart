@@ -4,7 +4,7 @@ import 'package:fluttter_project/ViewModel/TaskController.dart';
 import 'package:intl/intl.dart';
 import '../Common/TaskCard.dart';            
 import '../models/task.dart';      
-
+import "../View/TaskDetails_Page.dart";
 class DeliverySchedulePage extends StatefulWidget {
   const DeliverySchedulePage({Key? key}) : super(key: key);
 
@@ -81,7 +81,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                         task: tasks[index],
                         onTap: () => Navigator.pushNamed(
                           context,
-                          '/task-details',
+                          TaskDetailsPage.routeName,
                           arguments: tasks[index],
                         ),
                       );
@@ -152,9 +152,5 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         ),
       ),
     );
-  }
-
-  void _showTaskDetails(BuildContext context, Task task) {
-      
   }
 }
