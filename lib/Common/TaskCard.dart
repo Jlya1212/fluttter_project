@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../View/PartRequestDetailsPage.dart';
 import '../models/task.dart';
-import 'PartRequestDetailsPage.dart';
+
 
 class TaskCard extends StatelessWidget {
   final Task task; // get a task object
