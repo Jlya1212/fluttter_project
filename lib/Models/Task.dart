@@ -1,6 +1,7 @@
 enum TaskStatus { pending, inProgress, completed,  all }
 
 class Task {
+  final String taskName ; 
   final String taskCode;           // Unique code for the task
   final String fromLocation;       // From where
   final String toLocation;         // To where
@@ -15,6 +16,7 @@ class Task {
 
   // can 
   Task({
+    required this.taskName,
     required this.taskCode,
     required this.fromLocation,
     required this.toLocation,
@@ -31,6 +33,7 @@ class Task {
   // Optional: JSON serialization if using Firebase
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
+      taskName: json['taskName'],
       taskCode: json['taskCode'],
       fromLocation: json['fromLocation'],
       toLocation: json['toLocation'],
@@ -47,6 +50,7 @@ class Task {
 
   Map<String, dynamic> toJson() {
     return {
+      'taslName': taskName,
       'taskCode': taskCode,
       'fromLocation': fromLocation,
       'toLocation': toLocation,

@@ -24,6 +24,7 @@ class TaskController extends ChangeNotifier {
     try {
 
       final result = await repository.getTasksByStatus(status);
+      
       if (result.isSuccess) {
         _allTasks = result.data ?? [];
         _currentFilter = status;

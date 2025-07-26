@@ -3,10 +3,11 @@ import 'package:intl/intl.dart';
 import '../models/task.dart';
 
 class TaskCard extends StatelessWidget {
-  final Task task;
-  final VoidCallback? onTap;
+  final Task task; // get a task object
+  final VoidCallback? onTap; // optional callback for tap events
 
   const TaskCard({
+    // constructor
     Key? key,
     required this.task,
     this.onTap,
@@ -14,18 +15,30 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // build the card UI
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ), // margin around the card
+      elevation: 2, // shadow effect
       shape: RoundedRectangleBorder(
+        // border radius for the card
+        side: BorderSide(
+          color: const Color(0xFFE0E0E0), // soft gray
+          width: 1,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: onTap,
+        // when user tapp this card area , do something :
+        onTap: onTap, // can change this to any function you want to call on tap
         borderRadius: BorderRadius.circular(12),
         child: Padding(
+          // padding inside the card
           padding: const EdgeInsets.all(16),
           child: Column(
+            // main content of the card
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header with status and task code
@@ -34,10 +47,12 @@ class TaskCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      _buildStatusIndicator(),
+                      _buildStatusIndicator(), // status indicator circle on right side [container]
                       const SizedBox(width: 8),
+
                       Text(
-                        task.itemDescription,
+                        // task code on left side
+                        task.taskName,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -46,76 +61,173 @@ class TaskCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  _buildStatusChip(),
+                  _buildStatusChip(), // function to build status container background color
                 ],
-              ),
+              ), // first row done
               const SizedBox(height: 12),
-              
-              // Date and time
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDate(task.startTime),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    _formatTime(task.startTime),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              
-              // Location info
+              // Task name
+                                    
               Text(
-                '${task.fromLocation} → ${task.toLocation}',
+                task.taskCode,
                 style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(221, 194, 188, 188),
                 ),
               ),
               const SizedBox(height: 12),
-              
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD), // light blue background
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFE0E0E0),
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  task.itemDescription,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color:  Color(0xFF1E1E1E),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Date and time
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100], // light background
+                      borderRadius: BorderRadius.circular(20), // rounded edges
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 8),
+
+                        Text(
+                          _formatDate(task.startTime),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _formatTime(task.startTime),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // Location info
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1C4E9), // light purple background
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFE0E0E0),
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  '${task.fromLocation} → ${task.toLocation}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              const Divider(
+                // <-- This is the line
+                height: 1,
+                color: Color(0xFFBDBDBD),
+                thickness: 1,
+              ),
+              const SizedBox(height: 12),
               // Bottom row with avatar and action button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: _getAvatarColor(),
-                        child: Text(
-                          task.ownerId.substring(0, 1).toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color:  const Color(0xFF81C784), 
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          size: 16,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${task.itemCount} item${task.itemCount > 1 ? 's' : ''}',
+                        task.ownerId,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: Colors.grey,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF9575CD), // soft purple
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.access_alarms_sharp,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _randomTimeCost(),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
@@ -147,14 +259,11 @@ class TaskCard extends StatelessWidget {
       default:
         color = Colors.grey;
     }
-    
+
     return Container(
       width: 8,
       height: 8,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 
@@ -233,11 +342,7 @@ class TaskCard extends StatelessWidget {
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
-        icon,
-        size: 20,
-        color: color,
-      ),
+      child: Icon(icon, size: 20, color: color),
     );
   }
 
@@ -256,16 +361,35 @@ class TaskCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
 
   String _formatTime(DateTime time) {
-    final hour = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
+    final hour = time.hour == 0
+        ? 12
+        : (time.hour > 12 ? time.hour - 12 : time.hour);
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $period';
+  }
+
+  String _randomTimeCost() {
+    final random =
+        DateTime.now().millisecondsSinceEpoch %
+        60; // Random time cost between 0 and 59 minutes
+    return '$random min';
   }
 }
