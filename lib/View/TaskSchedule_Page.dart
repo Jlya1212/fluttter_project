@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:fluttter_project/Repository/MockUpTaskRepository.dart';
 import 'package:fluttter_project/ViewModel/TaskController.dart';
 import 'package:intl/intl.dart';
-import 'TaskCard.dart';            
+import '../Common/TaskCard.dart';            
 import '../models/task.dart';      
 
 class DeliverySchedulePage extends StatefulWidget {
   const DeliverySchedulePage({Key? key}) : super(key: key);
 
+  static const routeName = '/delivery-schedule';
+
   @override
   _DeliverySchedulePageState createState() => _DeliverySchedulePageState();
-}
+  
+  }
 
 class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   late final TaskController _controller;
@@ -42,7 +45,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () {}, 
+          onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: const Text(
@@ -76,7 +79,11 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                     itemBuilder: (context, index) {
                       return TaskCard(
                         task: tasks[index],
-                        onTap: () => _showTaskDetails(context, tasks[index]),
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/task-details',
+                          arguments: tasks[index],
+                        ),
                       );
                     },
                   ),
@@ -89,10 +96,10 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         selectedItemColor: Colors.orange,
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined),      label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.schedule),            label: 'Schedule'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined),label: 'Track'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline),      label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined),        label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.schedule),             label: 'Schedule'),
+          BottomNavigationBarItem(icon: Icon(Icons.update),               label: 'Status Update'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline),       label: 'Profile'),
         ],
       ),
     );
@@ -148,26 +155,6 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   }
 
   void _showTaskDetails(BuildContext context, Task task) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Task: ${task.taskCode}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Item: ${task.itemDescription}'),
-            Text('Count: ${task.itemCount}'),
-            Text('From: ${task.fromLocation}'),
-            Text('To: ${task.toLocation}'),
-            Text('Status: ${task.status}'),
-            Text('Owner: ${task.ownerId}'),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
-        ],
-      ),
-    );
+      
   }
 }
