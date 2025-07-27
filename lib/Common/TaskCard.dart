@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../View/PartRequestDetailsPage.dart';
 import '../models/task.dart';
+
 
 class TaskCard extends StatelessWidget {
   final Task task; // get a task object
@@ -32,7 +34,14 @@ class TaskCard extends StatelessWidget {
       ),
       child: InkWell(
         // when user tapp this card area , do something :
-        onTap: onTap, // can change this to any function you want to call on tap
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PartRequestDetailsPage(task: task),
+            ),
+          );
+        },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           // padding inside the card
