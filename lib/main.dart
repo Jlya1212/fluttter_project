@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:fluttter_project/Repository/MockUpRepository.dart';
+import 'package:fluttter_project/ViewModel/UserController.dart';
+import 'package:provider/provider.dart';
 import 'Router/Router.dart';
+
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => UserController(MockUpRepository()),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -12,7 +21,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Delivery App',
       onGenerateRoute: AppRouter.onGenerateRoute,
-      initialRoute: '/home',
+      initialRoute: '/',
     );
   }
 }

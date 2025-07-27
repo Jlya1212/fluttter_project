@@ -9,7 +9,7 @@ class UserController extends ChangeNotifier {
 
   UserController(
     this.repository
-    ) : currentUser = null;
+    ) ;
 
   // pseudocode for user authentication
   // 1. get user by email :
@@ -30,6 +30,17 @@ class UserController extends ChangeNotifier {
     return Result.failure("Invalid email");
   }
 
+  // 2. get current user , since after user login the data is saved in currentUser which is in memory so not need using async / future :
+  Result<User> getCurrentUser() {
+    if (currentUser != null) {
+      return Result.success(currentUser!);
+    }
+    return Result.failure("No user is currently logged in");
+  }
 
-
+  void setCurrentUser(User user) {
+    currentUser = user;
+    notifyListeners();
+  }
+  
 }    

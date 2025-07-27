@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../ViewModel/UserController.dart';
 import '../Repository/MockUpRepository.dart';
 import 'home_page.dart';
@@ -29,7 +30,9 @@ class _LoginPageState extends State<LoginPage> {
     final id = _idController.text.trim();
     final password = _passwordController.text;
 
-    final result = await _controller.UserLogin(id, password);
+    final controller = Provider.of<UserController>(context, listen: false);
+
+    final result = await controller.UserLogin(id, password);
 
     if (result.isSuccess) {
       Navigator.pushReplacementNamed(context, HomePage.routeName);
@@ -39,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
