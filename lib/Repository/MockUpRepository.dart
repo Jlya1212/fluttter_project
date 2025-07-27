@@ -101,7 +101,7 @@ class MockUpRepository implements Repository {
     User(
       id: 'user001',
       username: 'JohnDoe',
-      email: 'johndoe@example.com',
+      email: 'johndoe',
       phone: '012-3456789',
       password: 'password123',
     ),

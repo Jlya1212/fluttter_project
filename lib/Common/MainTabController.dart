@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttter_project/Common/TabNavigator.dart';
-import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
-import 'package:provider/provider.dart';
 import '../View/Home_Page.dart';
 import '../View/TaskSchedule_Page.dart';
 import '../View/Profile_Page.dart';
-import '../ViewModel/UserController.dart';
-
+import '../View/StatusUpdate_Page.dart';
 class MainTabController extends StatefulWidget {
   const MainTabController({super.key});
   static const routeName = '/main';
@@ -19,6 +16,7 @@ class _MainTabControllerState extends State<MainTabController> {
   int _currentIndex = 0;
 
   final _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
@@ -50,6 +48,11 @@ class _MainTabControllerState extends State<MainTabController> {
             ),
             TabNavigator(
               navigatorKey: _navigatorKeys[2],
+              tabName: 'Status Update',
+              rootPage: const StatusUpdate(),
+            ),
+            TabNavigator(
+              navigatorKey: _navigatorKeys[3],
               tabName: 'profile',
               rootPage: const ProfilePage(),
             ),
@@ -77,5 +80,9 @@ class _MainTabControllerState extends State<MainTabController> {
   setState(() {
     _currentIndex = index;
   });
+  // TODO : 
+  // develop a stack call history for the new tab
+  // pop function   
+  // push function : everytimes the swtichToTab is called, the new tab will be pushed to the stack
 }
 }

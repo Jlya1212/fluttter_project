@@ -47,7 +47,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).maybePop(),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: const Text(
