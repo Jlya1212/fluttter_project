@@ -7,8 +7,8 @@ import 'package:fluttter_project/ViewModel/TaskController.dart';
 import 'package:fluttter_project/ViewModel/UserController.dart';
 import '../Common/TaskCard.dart';
 import '../Models/Task.dart';
-class DeliverySchedulePage extends StatefulWidget {
 
+class DeliverySchedulePage extends StatefulWidget {
   const DeliverySchedulePage({Key? key}) : super(key: key);
 
   static const routeName = '/delivery-schedule';
@@ -19,14 +19,13 @@ class DeliverySchedulePage extends StatefulWidget {
 
 class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   late final TaskController _controller;
-  late final VoidCallback    _listener;
-  int _currentIndex = 1;
+  late final VoidCallback _listener;
 
   @override
   void initState() {
     super.initState();
     _controller = TaskController(MockUpRepository());
-    _listener   = () => setState(() {});
+    _listener = () => setState(() {});
     _controller.addListener(_listener);
 
     _controller.loadTasksAndSetFilter(TaskStatus.all);
@@ -48,15 +47,22 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: const Text(
           'Delivery Schedule',
-          style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert, color: Colors.black)),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_vert, color: Colors.black),
+          ),
         ],
       ),
       body: Column(
@@ -66,10 +72,10 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
             color: Colors.white,
             child: Row(
               children: [
-                _buildTab('All Orders',     TaskStatus.all),
-                _buildTab('Pending',        TaskStatus.pending),
-                _buildTab('In Progress',    TaskStatus.inProgress),
-                _buildTab('Completed',      TaskStatus.completed),
+                _buildTab('All Orders', TaskStatus.all),
+                _buildTab('Pending', TaskStatus.pending),
+                _buildTab('In Progress', TaskStatus.inProgress),
+                _buildTab('Completed', TaskStatus.completed),
               ],
             ),
           ),
@@ -82,18 +88,21 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                     itemBuilder: (context, index) {
                       return TaskCard(
                         task: tasks[index],
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => PartRequestDetailsPage(task: tasks[index]),
-                        )),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PartRequestDetailsPage(task: tasks[index]),
+                          ),
+                        ),
                       );
                     },
                   ),
           ),
         ],
-
       ),
     );
   }
+
   Widget _buildTab(String title, TaskStatus status) {
     final isSelected = _controller.currentFilter == status;
     final count = status == TaskStatus.all
@@ -109,7 +118,10 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: isSelected ? Colors.orange : Colors.transparent, width: 2),
+              bottom: BorderSide(
+                color: isSelected ? Colors.orange : Colors.transparent,
+                width: 2,
+              ),
             ),
           ),
           child: Row(
@@ -133,7 +145,11 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                   ),
                   child: Text(
                     count.toString(),
-                    style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'TaskSchedule_Page.dart'; // import to access routeName
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.jumpToSchedulePressed});
+
+  final VoidCallback jumpToSchedulePressed;
 
   static const routeName = '/home';
 
@@ -33,11 +35,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const DeliverySchedulePage(),
-                ));
-              },
+              onPressed: widget.jumpToSchedulePressed,
               icon: const Icon(Icons.schedule),
               label: const Text('Go to Delivery Schedule'),
               style: ElevatedButton.styleFrom(

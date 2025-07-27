@@ -31,6 +31,8 @@ class _MainTabControllerState extends State<MainTabController> {
         final isFirstRouteInCurrentTab =
             !(await _navigatorKeys[_currentIndex].currentState!.maybePop());
         return isFirstRouteInCurrentTab;
+
+        
       },
       child: Scaffold(
         body: IndexedStack(
@@ -39,7 +41,7 @@ class _MainTabControllerState extends State<MainTabController> {
             TabNavigator(
               navigatorKey: _navigatorKeys[0],
               tabName: 'home',
-              rootPage: const HomePage(),
+              rootPage: HomePage(jumpToSchedulePressed: () => switchToTab(1)),
             ),
             TabNavigator(
               navigatorKey: _navigatorKeys[1],
@@ -71,4 +73,9 @@ class _MainTabControllerState extends State<MainTabController> {
       ),
     );
   }
+  void switchToTab(int index) {
+  setState(() {
+    _currentIndex = index;
+  });
+}
 }
