@@ -31,36 +31,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ? _buildProfileInfo(result.data!)
             : _buildError(context, result.errorMessage ?? "Unknown error"),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex, // track active tab
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() => _currentIndex = index); // update tab
-
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, HomePage.routeName);
-              break;
-            case 1:
-              Navigator.pushNamed(context, DeliverySchedulePage.routeName);
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/status');
-              break;
-            case 3:
-              Navigator.pushNamed(context, ProfilePage.routeName);
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.schedule), label: 'Schedule'),
-          BottomNavigationBarItem(icon: Icon(Icons.update), label: 'Status Update'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
-      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttter_project/Common/MainTabController.dart';
 import 'package:provider/provider.dart';
 import '../ViewModel/UserController.dart';
 import '../Repository/MockUpRepository.dart';
@@ -35,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
     final result = await controller.UserLogin(id, password);
 
     if (result.isSuccess) {
-      Navigator.pushReplacementNamed(context, HomePage.routeName);
+      Navigator.pushReplacementNamed(context, MainTabController.routeName);
     } else {
       setState(() {
         _errorText = result.errorMessage ?? 'Login failed';
