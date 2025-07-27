@@ -1,10 +1,9 @@
 import 'package:flutter/foundation.dart';
-import '../models/task.dart';
-import '../Repository/TaskRepository.dart';
-import '../common/Result.dart';
+import '../Models/Task.dart';
+import '../Repository/Repository.dart';
 
 class TaskController extends ChangeNotifier {
-  final TaskRepository repository;
+  final Repository repository;
 
   TaskController(this.repository);
 
@@ -42,30 +41,5 @@ class TaskController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 1. Create a new task
-  Future<Result<void>> createTask(Task task) async {
-    try {
-      final result = await repository.addTask(task);
-      if (result.isSuccess) {
-        return Result.success(null);
-      } else {
-        return Result.failure(result.errorMessage ?? 'Unknown error');
-      }
-    } catch (e) {
-      return Result.failure(
-        'Controller failed to create task: ${e.toString()}',
-      );
-    }
-  }
 
-  // 3. Update an existing task
-  Future<Result<void>> updateTask(Task task) async {
-    try {
-      return await repository.updateTask(task);
-    } catch (e) {
-      return Result.failure(
-        'Controller failed to update task: ${e.toString()}',
-      );
-    }
-  }
 }

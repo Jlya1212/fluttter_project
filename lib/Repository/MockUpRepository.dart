@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'TaskRepository.dart';
-import '../models/task.dart';
+import 'Repository.dart';
+import '../Models/Task.dart';
 import '../common/Result.dart';
-import '../models/User.dart';
-class MockTaskRepository implements TaskRepository {
+import '../Models/User.dart';
+
+class MockUpRepository implements Repository {
   // 1. This is the mock task list used as the in-memory data source
   final List<Task> _tasks = [
     Task(
@@ -116,7 +117,6 @@ class MockTaskRepository implements TaskRepository {
   @override
   Future<Result<List<Task>>> getTasksByStatus(TaskStatus status) async {
     try {
-      await Future.delayed(Duration(milliseconds: 200));
       if (status == TaskStatus.all) {
         return Result.success(_tasks);
       } else {
@@ -127,50 +127,16 @@ class MockTaskRepository implements TaskRepository {
       return Result.failure('Failed to fetch tasks: ${e.toString()}');
     }
   }
-
-  @override
-  Future<Result<Task>> addTask(Task task) async {
-    try {
-      await Future.delayed(Duration(milliseconds: 100));
-      _tasks.add(task);
-      return Result.success(task); // return added object
-    } catch (e) {
-      return Result.failure('Failed to add task: ${e.toString()}');
-    }
-  }
-
-  @override
-  Future<Result<Task>> updateTask(Task updatedTask) async {
-    try {
-      await Future.delayed(Duration(milliseconds: 100));
-      final index = _tasks.indexWhere(
-        (t) => t.taskCode == updatedTask.taskCode,
-      );
-      if (index == -1) {
-        return Result.failure('Task not found');
-      }
-      _tasks[index] = updatedTask;
-      return Result.success(updatedTask);
-    } catch (e) {
-      return Result.failure('Failed to update task: ${e.toString()}');
-    }
-  }
-
-  @override
-  Future<Result<Task>> deleteTask(String taskCode) async {
-    try {
-      await Future.delayed(Duration(milliseconds: 100));
-      final index = _tasks.indexWhere((t) => t.taskCode == taskCode);
-      if (index == -1) {
-        return Result.failure('Task not found');
-      }
-      final removedTask = _tasks.removeAt(index);
-      return Result.success(removedTask);
-    } catch (e) {
-      return Result.failure('Failed to delete task: ${e.toString()}');
-    }
-  }
-
-
   
+  @override
+  Future<Result<User>> getUserByEmail(String email) async {
+    try {
+      final User user = _users.firstWhere((user) => user.email == email);
+      return Result.success(user);
+    } catch (e) {
+      return Result.failure('User not found');
+    }
+  }
+
+
 }

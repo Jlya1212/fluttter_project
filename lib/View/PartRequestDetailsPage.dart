@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/models/task.dart';
+import 'package:fluttter_project/Models/Task.dart';
 
 class PartRequestDetailsPage extends StatefulWidget {
   final Task task;

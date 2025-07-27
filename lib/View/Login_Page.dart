@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
-import '../Router/router.dart';
+import '../ViewModel/UserController.dart';
+import '../Repository/MockUpRepository.dart';
 import 'home_page.dart';
-import '../Models/User.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';
@@ -18,37 +17,25 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   String? _errorText;
+  late final UserController _controller;
 
-  void _handleLogin() {
+  @override
+  void initState() {
+    super.initState();
+    _controller = UserController(MockUpRepository()); // init controller manually
+  }
+
+  Future<void> _handleLogin() async {
     final id = _idController.text.trim();
     final password = _passwordController.text;
 
-    final dummyUsers = [
-      User(
-        id: 'user1',
-        password: 'password1',
-        username: 'User One',
-        email: 'user1@example.com',
-        phone: '1234567890',
-      ),
-      User(
-        id: 'user2',
-        password: 'password2',
-        username: 'User Two',
-        email: 'user2@example.com',
-        phone: '0987654321',
-      ),
-      // Add more dummy users as needed
-    ];
-    final user = dummyUsers.where((u) => u.id == id && u.password == password).isNotEmpty
-        ? dummyUsers.firstWhere((u) => u.id == id && u.password == password)
-        : null;
+    final result = await _controller.UserLogin(id, password);
 
-    if (user != null) {
+    if (result.isSuccess) {
       Navigator.pushReplacementNamed(context, HomePage.routeName);
     } else {
       setState(() {
-        _errorText = 'Invalid ID or password';
+        _errorText = result.errorMessage ?? 'Login failed';
       });
     }
   }
@@ -116,18 +103,16 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // Personnel ID
                 TextField(
                   controller: _idController,
                   decoration: const InputDecoration(
-                    labelText: 'Personnel ID',
-                    hintText: 'Enter your personnel ID',
+                    labelText: 'Personnel Email',
+                    hintText: 'Enter your email',
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // Password
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
@@ -140,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 if (_errorText != null)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
+                    padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       _errorText!,
                       style: const TextStyle(color: Colors.red),
@@ -149,7 +134,6 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 24),
 
-                // Sign In button
                 ElevatedButton.icon(
                   onPressed: _handleLogin,
                   icon: const Icon(Icons.login),

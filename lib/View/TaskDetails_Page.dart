@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/task.dart';
+import '../Models/Task.dart';
 
 class TaskDetailsPage extends StatelessWidget {
   static const routeName = '/task-details';
