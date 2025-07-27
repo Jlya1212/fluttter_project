@@ -12,8 +12,7 @@ class DeliverySchedulePage extends StatefulWidget {
 
   @override
   _DeliverySchedulePageState createState() => _DeliverySchedulePageState();
-  
-  }
+}
 
 class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   late final TaskController _controller;

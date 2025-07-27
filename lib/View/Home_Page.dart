@@ -4,6 +4,7 @@ import 'TaskSchedule_Page.dart'; // import to access routeName
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  static const routeName = '/home';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
