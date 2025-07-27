@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Delivery App',
       onGenerateRoute: AppRouter.onGenerateRoute,
-      initialRoute: '/',
+      initialRoute: '/home',
     );
   }
 }

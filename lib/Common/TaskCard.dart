@@ -354,19 +354,6 @@ class TaskCard extends StatelessWidget {
     );
   }
 
-  Color _getAvatarColor() {
-    // Generate a color based on ownerId hash
-    final colors = [
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
-    ];
-    return colors[task.ownerId.hashCode % colors.length];
-  }
-
   String _formatDate(DateTime date) {
     const months = [
       'Jan',
