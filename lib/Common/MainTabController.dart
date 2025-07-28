@@ -14,6 +14,7 @@ class MainTabController extends StatefulWidget {
 
 class _MainTabControllerState extends State<MainTabController> {
   int _currentIndex = 0;
+  final List <int> _tabHistory = [0] 
 
   final _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -76,10 +77,16 @@ class _MainTabControllerState extends State<MainTabController> {
       ),
     );
   }
+
   void switchToTab(int index) {
-  setState(() {
-    _currentIndex = index;
-  });
+    if (index != _currentIndex) {
+      _tabHistoryStack.add(index); 
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
+ 
   // TODO : 
   // develop a stack call history for the new tab
   // pop function   
