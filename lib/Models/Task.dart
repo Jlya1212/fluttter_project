@@ -1,20 +1,20 @@
-enum TaskStatus { pending, inProgress, completed,  all }
+enum TaskStatus { pending, pickedUp, inProgress, completed, all }
 
 class Task {
-  final String taskName ; 
-  final String taskCode;           // Unique code for the task
-  final String fromLocation;       // From where
-  final String toLocation;         // To where
-  final String itemDescription;    // What to deliver
-  final int itemCount;             // Number of items to deliver
-  final DateTime startTime;        // Start time
-  final DateTime deadline;         // Deadline to complete the task
-  final TaskStatus status;         // Status enum
-  final String ownerId;            // Who posted the task
+  final String taskName;
+  final String taskCode; // Unique code for the task
+  final String fromLocation; // From where
+  final String toLocation; // To where
+  final String itemDescription; // What to deliver
+  final int itemCount; // Number of items to deliver
+  final DateTime startTime; // Start time
+  final DateTime deadline; // Deadline to complete the task
+  final TaskStatus status; // Status enum
+  final String ownerId; // Who posted the task
   final String? confirmationPhoto; // URL or path to a completion photo
-  final String? confirmationSign;  // URL or path to a signature image
+  final String? confirmationSign; // URL or path to a signature image
 
-  // can 
+  // can
   Task({
     required this.taskName,
     required this.taskCode,
@@ -38,7 +38,7 @@ class Task {
       fromLocation: json['fromLocation'],
       toLocation: json['toLocation'],
       itemDescription: json['itemDescription'],
-      itemCount: json['itemCount'] , 
+      itemCount: json['itemCount'],
       startTime: DateTime.parse(json['startTime']),
       deadline: DateTime.parse(json['deadline']),
       status: TaskStatus.values.firstWhere((e) => e.name == json['status']),
@@ -64,6 +64,4 @@ class Task {
       'confirmationSign': confirmationSign,
     };
   }
-
-
 }

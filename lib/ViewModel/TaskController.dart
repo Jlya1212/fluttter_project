@@ -36,6 +36,31 @@ class TaskController extends ChangeNotifier {
     }
   }
 
+  Future<void> updateTaskStatus(String taskCode, TaskStatus newStatus) async {
+    final result = await repository.getTasksByStatus(TaskStatus.all);
+    if (result.isSuccess) {
+      _allTasks = result.data ?? [];
+      final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+      if (taskIndex != -1) {
+        final oldTask = _allTasks[taskIndex];
+        _allTasks[taskIndex] = Task(
+          taskName: oldTask.taskName,
+          taskCode: oldTask.taskCode,
+          fromLocation: oldTask.fromLocation,
+          toLocation: oldTask.toLocation,
+          itemDescription: oldTask.itemDescription,
+          itemCount: oldTask.itemCount,
+          startTime: oldTask.startTime,
+          deadline: oldTask.deadline,
+          status: newStatus, // The new status is applied here
+          ownerId: oldTask.ownerId,
+        );
+        notifyListeners(); // Refresh the UI
+      }
+    }
+  }
+
+
   void setFilter(TaskStatus status) {
     _currentFilter = status;
     notifyListeners();

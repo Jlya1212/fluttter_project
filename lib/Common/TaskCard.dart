@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../View/PartRequestDetails_Page.dart';
-import '../Models/Task.dart';
-
+import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
+import '../Models/Task.dart'; // Corrected import path
 
 class TaskCard extends StatelessWidget {
   final Task task; // get a task object
@@ -57,7 +56,6 @@ class TaskCard extends StatelessWidget {
                     children: [
                       _buildStatusIndicator(), // status indicator circle on right side [container]
                       const SizedBox(width: 8),
-
                       Text(
                         // task code on left side
                         task.taskName,
@@ -74,7 +72,7 @@ class TaskCard extends StatelessWidget {
               ), // first row done
               const SizedBox(height: 12),
               // Task name
-                                    
+
               Text(
                 task.taskCode,
                 style: const TextStyle(
@@ -101,7 +99,7 @@ class TaskCard extends StatelessWidget {
                   task.itemDescription,
                   style: const TextStyle(
                     fontSize: 14,
-                    color:  Color(0xFF1E1E1E),
+                    color: Color(0xFF1E1E1E),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -129,7 +127,6 @@ class TaskCard extends StatelessWidget {
                           color: Colors.grey,
                         ),
                         const SizedBox(width: 8),
-
                         Text(
                           _formatDate(task.startTime),
                           style: const TextStyle(
@@ -197,7 +194,7 @@ class TaskCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color:  const Color(0xFF81C784), 
+                          color: const Color(0xFF81C784),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -216,7 +213,6 @@ class TaskCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -256,16 +252,20 @@ class TaskCard extends StatelessWidget {
       case TaskStatus.pending:
         color = Colors.orange;
         break;
-      case TaskStatus.inProgress:
+      case TaskStatus.pickedUp:
         color = Colors.blue;
+        break;
+      case TaskStatus.inProgress:
+        color = Colors.indigo;
         break;
       case TaskStatus.completed:
         color = Colors.green;
         break;
       case TaskStatus.all:
+      default:
         color = Colors.grey;
-      }
-
+        break;
+    }
     return Container(
       width: 8,
       height: 8,
@@ -276,23 +276,34 @@ class TaskCard extends StatelessWidget {
   Widget _buildStatusChip() {
     Color backgroundColor;
     Color textColor;
+    String statusText;
 
     switch (task.status) {
       case TaskStatus.pending:
         backgroundColor = Colors.orange.shade100;
         textColor = Colors.orange.shade800;
+        statusText = 'Pending';
         break;
-      case TaskStatus.inProgress:
+      case TaskStatus.pickedUp:
         backgroundColor = Colors.blue.shade100;
         textColor = Colors.blue.shade800;
+        statusText = 'Picked Up';
+        break;
+      case TaskStatus.inProgress:
+        backgroundColor = Colors.indigo.shade100;
+        textColor = Colors.indigo.shade800;
+        statusText = 'En Route';
         break;
       case TaskStatus.completed:
         backgroundColor = Colors.green.shade100;
         textColor = Colors.green.shade800;
+        statusText = 'Completed';
         break;
       case TaskStatus.all:
+      default:
         backgroundColor = Colors.grey.shade100;
         textColor = Colors.grey.shade800;
+        statusText = 'Unknown';
         break;
     }
 
@@ -303,7 +314,7 @@ class TaskCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        task.status.name,
+        statusText,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -316,26 +327,29 @@ class TaskCard extends StatelessWidget {
   Widget _buildActionButton() {
     IconData icon;
     Color color;
-
     switch (task.status) {
       case TaskStatus.pending:
         icon = Icons.play_arrow;
         color = Colors.orange;
         break;
-      case TaskStatus.inProgress:
-        icon = Icons.navigation;
+      case TaskStatus.pickedUp:
+        icon = Icons.inventory_2_outlined;
         color = Colors.blue;
+        break;
+      case TaskStatus.inProgress:
+        icon = Icons.local_shipping;
+        color = Colors.indigo;
         break;
       case TaskStatus.completed:
         icon = Icons.check_circle;
         color = Colors.green;
         break;
       case TaskStatus.all:
-        icon = Icons.list;
+      default:
+        icon = Icons.more_horiz;
         color = Colors.grey;
         break;
     }
-
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -348,35 +362,21 @@ class TaskCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
 
   String _formatTime(DateTime time) {
-    final hour = time.hour == 0
-        ? 12
-        : (time.hour > 12 ? time.hour - 12 : time.hour);
+    final hour = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $period';
   }
 
   String _randomTimeCost() {
-    final random =
-        DateTime.now().millisecondsSinceEpoch %
-        60; // Random time cost between 0 and 59 minutes
+    final random = DateTime.now().millisecondsSinceEpoch % 60;
     return '$random min';
   }
 }
