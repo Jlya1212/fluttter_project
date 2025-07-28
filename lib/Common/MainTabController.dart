@@ -65,7 +65,7 @@ class _MainTabControllerState extends State<MainTabController> {
               tabName: 'home',
               rootPage: HomePage(
                 jumpToSchedulePressed: () => switchToTab(1),
-                jumpToUpdatesPressed: () => switchToTab(2), // Add this
+                jumpToUpdatesPressed: () => switchToTab(2),
               ),
             ),
             TabNavigator(
@@ -85,29 +85,58 @@ class _MainTabControllerState extends State<MainTabController> {
             ),
           ],
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          selectedItemColor: Colors.orange,
-          unselectedItemColor: Colors.grey,
-          onTap: switchToTab, 
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              label: 'Home',
+        bottomNavigationBar: Container(
+          margin: const EdgeInsets.all(12.0), // Margin to create the floating effect
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24), // Rounded corners
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: switchToTab,
+              backgroundColor: Colors.transparent, // Important for container color to show
+              elevation: 0, // Remove default shadow
+              type: BottomNavigationBarType.fixed, // Keep items evenly spaced
+
+              selectedItemColor: Colors.deepPurple, // Color for the selected icon and label
+              unselectedItemColor: Colors.grey.shade500, // Color for unselected icons
+
+              showSelectedLabels: true, // Show label only for the active tab
+              showUnselectedLabels: false,
+
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.dashboard_outlined),
+                  activeIcon: Icon(Icons.dashboard), // Filled icon when active
+                  label: 'Dashboard',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.schedule_outlined),
+                  activeIcon: Icon(Icons.schedule), // Filled icon when active
+                  label: 'Schedule',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.update_outlined),
+                  activeIcon: Icon(Icons.update), // Filled icon when active
+                  label: 'Updates',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person), // Filled icon when active
+                  label: 'Profile',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.schedule),
-              label: 'Schedule',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.update),
-              label: 'Status Update',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: 'Profile',
-            ),
-          ],
+          ),
         ),
       ),
     );
