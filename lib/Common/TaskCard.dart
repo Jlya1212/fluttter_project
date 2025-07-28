@@ -264,9 +264,7 @@ class TaskCard extends StatelessWidget {
         break;
       case TaskStatus.all:
         color = Colors.grey;
-      default:
-        color = Colors.grey;
-    }
+      }
 
     return Container(
       width: 8,
@@ -296,9 +294,6 @@ class TaskCard extends StatelessWidget {
         backgroundColor = Colors.grey.shade100;
         textColor = Colors.grey.shade800;
         break;
-      default:
-        backgroundColor = Colors.grey.shade100;
-        textColor = Colors.grey.shade800;
     }
 
     return Container(
@@ -339,9 +334,6 @@ class TaskCard extends StatelessWidget {
         icon = Icons.list;
         color = Colors.grey;
         break;
-      default:
-        icon = Icons.more_horiz;
-        color = Colors.grey;
     }
 
     return Container(

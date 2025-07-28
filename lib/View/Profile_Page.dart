@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/Repository/MockUpRepository.dart';
-import 'package:fluttter_project/View/Home_Page.dart';
-import 'package:fluttter_project/View/TaskSchedule_Page.dart';
 import 'package:provider/provider.dart';
 import '../Models/User.dart';
 import '../ViewModel/UserController.dart';
@@ -16,7 +13,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int _currentIndex = 3; // Profile tab is active
 
   @override
   Widget build(BuildContext context) {

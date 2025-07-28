@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttter_project/Common/MainTabController.dart';
 import 'package:provider/provider.dart';
 import '../ViewModel/UserController.dart';
-import '../Repository/MockUpRepository.dart';
-import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';
@@ -24,16 +22,14 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _controller = UserController(MockUpRepository()); // init controller manually
+    _controller = Provider.of<UserController>(context, listen: false);
   }
 
   Future<void> _handleLogin() async {
     final id = _idController.text.trim();
     final password = _passwordController.text;
 
-    final controller = Provider.of<UserController>(context, listen: false);
-
-    final result = await controller.UserLogin(id, password);
+    final result = await _controller.UserLogin(id, password);
 
     if (result.isSuccess) {
       Navigator.pushReplacementNamed(context, MainTabController.routeName);

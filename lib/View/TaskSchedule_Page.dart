@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttter_project/Repository/MockUpRepository.dart';
 import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
-import 'package:fluttter_project/View/Profile_Page.dart';
-import 'package:fluttter_project/View/home_page.dart';
 import 'package:fluttter_project/ViewModel/TaskController.dart';
-import 'package:fluttter_project/ViewModel/UserController.dart';
 import '../Common/TaskCard.dart';
 import '../Models/Task.dart';
 
@@ -24,7 +21,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   @override
   void initState() {
     super.initState();
-    _controller = TaskController(MockUpRepository());
+    _controller = TaskController(MockUpRepository()); // if in the future we need to get tasksController from Provider, we can do that here
     _listener = () => setState(() {});
     _controller.addListener(_listener);
 
