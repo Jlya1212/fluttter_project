@@ -24,7 +24,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   @override
   void initState() {
     super.initState();
-    // Get the TaskController from the Provider without listening to changes here.
+
     _controller = Provider.of<TaskController>(context, listen: false);
     // Load initial data.
     _controller.loadTasksAndSetFilter(TaskStatus.all);
@@ -37,7 +37,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Use a Consumer to listen for changes in the TaskController
+
     return Consumer<TaskController>(
       builder: (context, controller, child) {
         final tasks = controller.filteredTasks;

@@ -27,7 +27,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     // Load the task data when the page is first loaded
-    // Use addPostFrameCallback to ensure the context is available
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TaskController>(context, listen: false)
           .loadTasksAndSetFilter(TaskStatus.all);
@@ -158,7 +157,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Helper for a single item in the summary (e.g., Pending, En Route)
+
   Widget _buildSummaryItem(
       {required IconData icon,
         required Color color,
@@ -219,7 +218,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Helper for the large tappable cards (e.g., Delivery Schedule)
+
   Widget _buildFunctionCard({
     required IconData icon,
     required Color color,

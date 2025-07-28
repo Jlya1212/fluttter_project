@@ -38,6 +38,11 @@ class UserController extends ChangeNotifier {
     return Result.failure("No user is currently logged in");
   }
 
+  void logout(){
+    currentUser = null;
+
+
+  }
   void setCurrentUser(User user) {
     currentUser = user;
     notifyListeners();

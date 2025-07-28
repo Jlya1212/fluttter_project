@@ -86,7 +86,7 @@ class _MainTabControllerState extends State<MainTabController> {
           ],
         ),
         bottomNavigationBar: Container(
-          margin: const EdgeInsets.all(12.0), // Margin to create the floating effect
+          margin: const EdgeInsets.all(12.0),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24), // Rounded corners
@@ -103,35 +103,35 @@ class _MainTabControllerState extends State<MainTabController> {
             child: BottomNavigationBar(
               currentIndex: _currentIndex,
               onTap: switchToTab,
-              backgroundColor: Colors.transparent, // Important for container color to show
-              elevation: 0, // Remove default shadow
-              type: BottomNavigationBarType.fixed, // Keep items evenly spaced
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              type: BottomNavigationBarType.fixed,
 
-              selectedItemColor: Colors.deepPurple, // Color for the selected icon and label
-              unselectedItemColor: Colors.grey.shade500, // Color for unselected icons
+              selectedItemColor: Colors.deepPurple,
+              unselectedItemColor: Colors.grey.shade500,
 
-              showSelectedLabels: true, // Show label only for the active tab
+              showSelectedLabels: true,
               showUnselectedLabels: false,
 
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.dashboard_outlined),
-                  activeIcon: Icon(Icons.dashboard), // Filled icon when active
+                  activeIcon: Icon(Icons.dashboard),
                   label: 'Dashboard',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.schedule_outlined),
-                  activeIcon: Icon(Icons.schedule), // Filled icon when active
+                  activeIcon: Icon(Icons.schedule),
                   label: 'Schedule',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.update_outlined),
-                  activeIcon: Icon(Icons.update), // Filled icon when active
+                  activeIcon: Icon(Icons.update),
                   label: 'Updates',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person), // Filled icon when active
+                  activeIcon: Icon(Icons.person),
                   label: 'Profile',
                 ),
               ],

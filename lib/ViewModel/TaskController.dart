@@ -46,8 +46,7 @@ class TaskController extends ChangeNotifier {
     }
   }
 
-  // --- MODIFIED FUNCTION ---
-  // This no longer needs to be async, as it's updating the in-memory list directly.
+
   void updateTaskStatus(String taskCode, TaskStatus newStatus) {
     final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
 

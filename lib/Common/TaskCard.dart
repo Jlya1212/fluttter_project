@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
-import '../Models/Task.dart'; // Corrected import path
+import '../Models/Task.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task; // get a task object
@@ -20,8 +20,8 @@ class TaskCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 8,
-      ), // margin around the card
-      elevation: 2, // shadow effect
+      ),
+      elevation: 2,
       shape: RoundedRectangleBorder(
         // border radius for the card
         side: BorderSide(
@@ -35,19 +35,19 @@ class TaskCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          // padding inside the card
+
           padding: const EdgeInsets.all(16),
           child: Column(
             // main content of the card
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with status and task code
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      _buildStatusIndicator(), // status indicator circle on right side [container]
+                      _buildStatusIndicator(), // status indicator circle on right side
                       const SizedBox(width: 8),
                       Text(
                         // task code on left side
@@ -172,13 +172,13 @@ class TaskCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               const Divider(
-                // <-- This is the line
+                // This is the line
                 height: 1,
                 color: Color(0xFFBDBDBD),
                 thickness: 1,
               ),
               const SizedBox(height: 12),
-              // Bottom row with avatar and action button
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
