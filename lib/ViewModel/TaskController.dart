@@ -21,6 +21,15 @@ class TaskController extends ChangeNotifier {
 
   TaskStatus get currentFilter => _currentFilter;
 
+  int get pendingTaskCount =>
+      _allTasks.where((t) => t.status == TaskStatus.pending).length;
+
+  int get inProgressTaskCount =>
+      _allTasks.where((t) => t.status == TaskStatus.inProgress).length;
+
+  int get completedTaskCount =>
+      _allTasks.where((t) => t.status == TaskStatus.completed).length;
+
   Future<void> loadTasksAndSetFilter(TaskStatus status) async {
     try {
       final result = await repository.getTasksByStatus(status);

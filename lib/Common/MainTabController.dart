@@ -63,7 +63,10 @@ class _MainTabControllerState extends State<MainTabController> {
             TabNavigator(
               navigatorKey: _navigatorKeys[0],
               tabName: 'home',
-              rootPage: HomePage(jumpToSchedulePressed: () => switchToTab(1)),
+              rootPage: HomePage(
+                jumpToSchedulePressed: () => switchToTab(1),
+                jumpToUpdatesPressed: () => switchToTab(2), // Add this
+              ),
             ),
             TabNavigator(
               navigatorKey: _navigatorKeys[1],
