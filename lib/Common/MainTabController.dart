@@ -4,6 +4,7 @@ import '../View/Home_Page.dart';
 import '../View/TaskSchedule_Page.dart';
 import '../View/Profile_Page.dart';
 import '../View/StatusUpdate_Page.dart';
+
 class MainTabController extends StatefulWidget {
   const MainTabController({super.key});
   static const routeName = '/main';
@@ -14,7 +15,35 @@ class MainTabController extends StatefulWidget {
 
 class _MainTabControllerState extends State<MainTabController> {
   int _currentIndex = 0;
-  final List <int> _tabHistory = [0] 
+  final List<int> _tabHistoryStack = [0];
+
+  void switchToTab(int index) {
+    if (index != _currentIndex) {
+      _tabHistoryStack.add(index);
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
+
+  Future<bool> _onWillPop() async {
+    final NavigatorState currentTabNav =
+        _navigatorKeys[_currentIndex].currentState!;
+
+    final isFirstRouteInTab = !await currentTabNav.maybePop();
+
+    if (isFirstRouteInTab) {
+      if (_tabHistoryStack.length > 1) {
+        _tabHistoryStack.removeLast();
+        final previousTab = _tabHistoryStack.last;
+        setState(() => _currentIndex = previousTab);
+        return false;
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   final _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -26,13 +55,7 @@ class _MainTabControllerState extends State<MainTabController> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        final isFirstRouteInCurrentTab =
-            !(await _navigatorKeys[_currentIndex].currentState!.maybePop());
-        return isFirstRouteInCurrentTab;
-
-        
-      },
+      onWillPop: _onWillPop, 
       child: Scaffold(
         body: IndexedStack(
           index: _currentIndex,
@@ -63,33 +86,32 @@ class _MainTabControllerState extends State<MainTabController> {
           currentIndex: _currentIndex,
           selectedItemColor: Colors.orange,
           unselectedItemColor: Colors.grey,
-          onTap: (index) {
-            setState(() => _currentIndex = index);
-          },
+          onTap: switchToTab, 
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.schedule), label: 'Schedule'),
-            BottomNavigationBarItem(icon: Icon(Icons.update), label: 'Status Update'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-          
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.schedule),
+              label: 'Schedule',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.update),
+              label: 'Status Update',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: 'Profile',
+            ),
           ],
         ),
       ),
     );
   }
-
-  void switchToTab(int index) {
-    if (index != _currentIndex) {
-      _tabHistoryStack.add(index); 
-      setState(() {
-        _currentIndex = index;
-      });
-    }
-  }
- 
+}
   // TODO : 
   // develop a stack call history for the new tab
   // pop function   
   // push function : everytimes the swtichToTab is called, the new tab will be pushed to the stack
-}
-}
+
