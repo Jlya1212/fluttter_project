@@ -1,3 +1,5 @@
+// lib/ViewModel/TaskController.dart
+
 import 'package:flutter/foundation.dart';
 import '../Models/Task.dart';
 import '../Repository/Repository.dart';
@@ -17,13 +19,12 @@ class TaskController extends ChangeNotifier {
 
   List<Task> get allTasks => _allTasks;
 
-  TaskStatus? get currentFilter => _currentFilter;
+  TaskStatus get currentFilter => _currentFilter;
 
   Future<void> loadTasksAndSetFilter(TaskStatus status) async {
     try {
-
       final result = await repository.getTasksByStatus(status);
-      
+
       if (result.isSuccess) {
         _allTasks = result.data ?? [];
         _currentFilter = status;
@@ -36,35 +37,35 @@ class TaskController extends ChangeNotifier {
     }
   }
 
-  Future<void> updateTaskStatus(String taskCode, TaskStatus newStatus) async {
-    final result = await repository.getTasksByStatus(TaskStatus.all);
-    if (result.isSuccess) {
-      _allTasks = result.data ?? [];
-      final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
-      if (taskIndex != -1) {
-        final oldTask = _allTasks[taskIndex];
-        _allTasks[taskIndex] = Task(
-          taskName: oldTask.taskName,
-          taskCode: oldTask.taskCode,
-          fromLocation: oldTask.fromLocation,
-          toLocation: oldTask.toLocation,
-          itemDescription: oldTask.itemDescription,
-          itemCount: oldTask.itemCount,
-          startTime: oldTask.startTime,
-          deadline: oldTask.deadline,
-          status: newStatus, // The new status is applied here
-          ownerId: oldTask.ownerId,
-        );
-        notifyListeners(); // Refresh the UI
-      }
+  // --- MODIFIED FUNCTION ---
+  // This no longer needs to be async, as it's updating the in-memory list directly.
+  void updateTaskStatus(String taskCode, TaskStatus newStatus) {
+    final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+
+    if (taskIndex != -1) {
+      final oldTask = _allTasks[taskIndex];
+      // Create a new Task instance with the updated status.
+      _allTasks[taskIndex] = Task(
+        taskName: oldTask.taskName,
+        taskCode: oldTask.taskCode,
+        fromLocation: oldTask.fromLocation,
+        toLocation: oldTask.toLocation,
+        itemDescription: oldTask.itemDescription,
+        itemCount: oldTask.itemCount,
+        startTime: oldTask.startTime,
+        deadline: oldTask.deadline,
+        status: newStatus, // Apply the new status
+        ownerId: oldTask.ownerId,
+        confirmationPhoto: oldTask.confirmationPhoto,
+        confirmationSign: oldTask.confirmationSign,
+      );
+      // Notify listening widgets to rebuild.
+      notifyListeners();
     }
   }
-
 
   void setFilter(TaskStatus status) {
     _currentFilter = status;
     notifyListeners();
   }
-
-
 }

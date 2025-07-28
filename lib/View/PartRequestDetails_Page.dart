@@ -18,23 +18,17 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
   void initState() {
     super.initState();
     _currentStatus = widget.task.status;
-    _originalStatus = widget.task.status; // Keep track of the initial status
+
   }
 
-  // This method is called when the back button is pressed
   void _navigateBack() {
-    // If the status is not 'completed', pass the new status back.
-    // Otherwise, pass back the original status.
-    final statusToReturn =
-    _currentStatus == TaskStatus.completed ? _originalStatus : _currentStatus;
-    Navigator.of(context).pop(statusToReturn);
+    Navigator.of(context).pop(_currentStatus);
   }
 
   void _handleConfirmation() {
-    // This is where you would navigate to the confirmation page.
-    // For now, we will pop the page and send back the 'completed' status.
     Navigator.of(context).pop(TaskStatus.completed);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +40,8 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
         shadowColor: Colors.grey.withOpacity(0.2),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          // --- THIS IS THE CORRECTED LINE ---
-          onPressed: _navigateBack, // It now correctly calls the function
+
+          onPressed: _navigateBack,
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

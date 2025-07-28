@@ -32,14 +32,7 @@ class TaskCard extends StatelessWidget {
       ),
       child: InkWell(
         // when user tapp this card area , do something :
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PartRequestDetailsPage(task: task),
-            ),
-          );
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           // padding inside the card

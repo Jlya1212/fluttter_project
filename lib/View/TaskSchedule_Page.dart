@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttter_project/Repository/MockUpRepository.dart';
 import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
 import 'package:fluttter_project/ViewModel/TaskController.dart';
+import 'package:provider/provider.dart';
 import '../Common/TaskCard.dart';
 import '../Models/Task.dart';
 
@@ -18,86 +19,97 @@ class DeliverySchedulePage extends StatefulWidget {
 
 class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   late final TaskController _controller;
-  late final VoidCallback _listener;
+
 
   @override
   void initState() {
     super.initState();
-    _controller = TaskController(MockUpRepository()); // if in the future we need to get tasksController from Provider, we can do that here
-    _listener = () => setState(() {});
-    _controller.addListener(_listener);
+    // Get the TaskController from the Provider without listening to changes here.
+    _controller = Provider.of<TaskController>(context, listen: false);
+    // Load initial data.
     _controller.loadTasksAndSetFilter(TaskStatus.all);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_listener);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final tasks = _controller.filteredTasks;
+    // Use a Consumer to listen for changes in the TaskController
+    return Consumer<TaskController>(
+      builder: (context, controller, child) {
+        final tasks = controller.filteredTasks;
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () =>  widget.maybePop(),
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        title: const Text(
-          'Delivery Schedule',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 3.2 TabRow：All / Pending / InProgress / Completed
-          Container(
-            color: Colors.white,
-            child: Row(
-              children: [
-                _buildTab('All Orders', TaskStatus.all),
-                _buildTab('Pending', TaskStatus.pending),
-                _buildTab('In Progress', TaskStatus.inProgress),
-                _buildTab('Completed', TaskStatus.completed),
-              ],
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              onPressed: () => widget.maybePop(),
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
             ),
+            title: const Text(
+              'Delivery Schedule',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            actions: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.more_vert, color: Colors.black),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: tasks.isEmpty
-                ? const Center(child: Text('No tasks found'))
-                : ListView.builder(
-                    itemCount: tasks.length,
-                    itemBuilder: (context, index) {
-                      return TaskCard(
-                        task: tasks[index],
-                        onTap: () => Navigator.of(context).push(
+          body: Column(
+            children: [
+              // TabRow
+              Container(
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    _buildTab('All Orders', TaskStatus.all),
+                    _buildTab('Pending', TaskStatus.pending),
+                    _buildTab('In Progress', TaskStatus.inProgress),
+                    _buildTab('Completed', TaskStatus.completed),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: tasks.isEmpty
+                    ? const Center(child: Text('No tasks found'))
+                    : ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return TaskCard(
+                      task: task,
+                      onTap: () async {
+                        final newStatus = await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PartRequestDetailsPage(task: tasks[index]),
+                            builder: (context) => PartRequestDetailsPage(task: task),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+
+                        if (newStatus != null && newStatus is TaskStatus) {
+                          // Use the controller from the Consumer
+                          controller.updateTaskStatus(task.taskCode, newStatus);
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
