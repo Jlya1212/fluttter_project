@@ -68,7 +68,7 @@ class _MainTabControllerState extends State<MainTabController> {
             TabNavigator(
               navigatorKey: _navigatorKeys[1],
               tabName: 'schedule',
-              rootPage: const DeliverySchedulePage(),
+              rootPage: DeliverySchedulePage(maybePop: () => _onWillPop()),
             ),
             TabNavigator(
               navigatorKey: _navigatorKeys[2],

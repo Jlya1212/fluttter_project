@@ -6,9 +6,11 @@ import '../Common/TaskCard.dart';
 import '../Models/Task.dart';
 
 class DeliverySchedulePage extends StatefulWidget {
-  const DeliverySchedulePage({Key? key}) : super(key: key);
+  const DeliverySchedulePage({Key? key, required this.maybePop}) : super(key: key);
 
   static const routeName = '/delivery-schedule';
+
+  final VoidCallback maybePop;
 
   @override
   _DeliverySchedulePageState createState() => _DeliverySchedulePageState();
@@ -24,7 +26,6 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
     _controller = TaskController(MockUpRepository()); // if in the future we need to get tasksController from Provider, we can do that here
     _listener = () => setState(() {});
     _controller.addListener(_listener);
-
     _controller.loadTasksAndSetFilter(TaskStatus.all);
   }
 
@@ -44,7 +45,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () =>  widget.maybePop(),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: const Text(
