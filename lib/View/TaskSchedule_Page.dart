@@ -6,11 +6,10 @@ import 'package:provider/provider.dart';
 import '../Common/TaskCard.dart';
 import '../Models/Task.dart';
 
+
 class DeliverySchedulePage extends StatefulWidget {
   const DeliverySchedulePage({Key? key, required this.maybePop}) : super(key: key);
-
   static const routeName = '/delivery-schedule';
-
   final VoidCallback maybePop;
 
   @override
@@ -20,24 +19,15 @@ class DeliverySchedulePage extends StatefulWidget {
 class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   late final TaskController _controller;
 
-
   @override
   void initState() {
     super.initState();
-
     _controller = Provider.of<TaskController>(context, listen: false);
-    // Load initial data.
     _controller.loadTasksAndSetFilter(TaskStatus.all);
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-
     return Consumer<TaskController>(
       builder: (context, controller, child) {
         final tasks = controller.filteredTasks;
@@ -60,6 +50,23 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
               ),
             ),
             actions: [
+              // 1. This code adds a sort popup to choose sort order by start time.
+              PopupMenuButton<TaskSort>(
+                tooltip: 'Sort by start time',
+                icon: const Icon(Icons.sort, color: Colors.black),
+                initialValue: controller.sort,
+                onSelected: controller.setSort,
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: TaskSort.startTimeAsc,
+                    child: Text('Start time ↑ (earliest first)'),
+                  ),
+                  PopupMenuItem(
+                    value: TaskSort.startTimeDesc,
+                    child: Text('Start time ↓ (latest first)'),
+                  ),
+                ],
+              ),
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.more_vert, color: Colors.black),
@@ -80,31 +87,45 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                   ],
                 ),
               ),
+              // 2. This code shows current sort hint under tabs (optional UX sugar).
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.schedule, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      controller.sort == TaskSort.startTimeAsc
+                          ? 'Sorted by Start Time: Earliest first'
+                          : 'Sorted by Start Time: Latest first',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 8),
               Expanded(
                 child: tasks.isEmpty
                     ? const Center(child: Text('No tasks found'))
                     : ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return TaskCard(
-                      task: task,
-                      onTap: () async {
-                        final newStatus = await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PartRequestDetailsPage(task: task),
-                          ),
-                        );
-
-                        if (newStatus != null && newStatus is TaskStatus) {
-                          // Use the controller from the Consumer
-                          controller.updateTaskStatus(task.taskCode, newStatus);
-                        }
-                      },
-                    );
-                  },
-                ),
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = tasks[index];
+                          return TaskCard(
+                            task: task,
+                            onTap: () async {
+                              final newStatus = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => PartRequestDetailsPage(task: task),
+                                ),
+                              );
+                              if (newStatus != null && newStatus is TaskStatus) {
+                                controller.updateTaskStatus(task.taskCode, newStatus);
+                              }
+                            },
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -113,6 +134,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
     );
   }
 
+  // unchanged tabs...
   Widget _buildTab(String title, TaskStatus status) {
     final isSelected = _controller.currentFilter == status;
     final count = status == TaskStatus.all
