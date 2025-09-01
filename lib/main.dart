@@ -1,19 +1,30 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/Repository/MockUpRepository.dart';
-import 'package:fluttter_project/ViewModel/TaskController.dart'; // Import TaskController
+
+import 'package:fluttter_project/Repository/FirebaseRepository.dart';
+import 'package:fluttter_project/ViewModel/TaskController.dart';
 import 'package:fluttter_project/ViewModel/UserController.dart';
 import 'package:provider/provider.dart';
 import 'Router/Router.dart';
 
-void main() {
+// Import Firebase Core and the generated options file
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+void main() async {
+  // Ensure Flutter is initialized before we run async code
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase using the generated options file
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
-    // Use MultiProvider to provide both controllers
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserController(MockUpRepository())),
-        ChangeNotifierProvider(create: (_) => TaskController(MockUpRepository())),
+        // We now provide our app with the real FirebaseRepository
+        ChangeNotifierProvider(create: (_) => UserController(FirebaseRepository())),
+        ChangeNotifierProvider(create: (_) => TaskController(FirebaseRepository())),
       ],
       child: const MyApp(),
     ),
@@ -32,3 +43,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

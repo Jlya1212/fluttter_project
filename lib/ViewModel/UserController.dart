@@ -2,35 +2,37 @@ import 'package:flutter/material.dart';
 import '../Models/User.dart';
 import '../Common/Result.dart';
 import '../Repository/Repository.dart';
-class UserController extends ChangeNotifier {
 
+class UserController extends ChangeNotifier {
   final Repository repository;
   User? currentUser;
 
-  UserController(
-    this.repository
-    ) ;
+  UserController(this.repository);
 
-  // pseudocode for user authentication
-  // 1. get user by email :
-  //    if user exists, check password then save user object into current user then return user object 
-  //    else return false 
-  Future<Result<User>> UserLogin(String email , String password) async {
+  // This method now performs a real Firebase login and then fetches the user profile.
+  Future<Result<User>> userLogin(String email, String password) async {
+    // Step 1: Authenticate with Firebase Auth
+    final loginResult = await repository.login(email, password);
 
-    final result = await repository.getUserByEmail(email);
+    if (loginResult.isSuccess) {
+      // Step 2: If authentication is successful, fetch the user's profile
+      // from the Firestore database to get details like username, phone, etc.
+      final profileResult = await repository.getUserByEmail(email);
 
-    if(result.isSuccess && result.data != null){
-      if(result.data!.password == password){
-        currentUser = result.data;
+      if (profileResult.isSuccess) {
+        currentUser = profileResult.data;
+        notifyListeners(); // Notify listeners that the user has changed
         return Result.success(currentUser!);
-      }else {
-        return Result.failure("Invalid password");
+      } else {
+        // This case would be rare: user exists in Auth but not in the database
+        return Result.failure(profileResult.errorMessage ?? "Could not fetch user profile.");
       }
+    } else {
+      // Authentication failed (wrong password, user not found, etc.)
+      return Result.failure(loginResult.errorMessage ?? "Invalid email or password.");
     }
-    return Result.failure("Invalid email");
   }
 
-  // 2. get current user , since after user login the data is saved in currentUser which is in memory so not need using async / future :
   Result<User> getCurrentUser() {
     if (currentUser != null) {
       return Result.success(currentUser!);
@@ -38,14 +40,13 @@ class UserController extends ChangeNotifier {
     return Result.failure("No user is currently logged in");
   }
 
-  void logout(){
+  void logout() {
     currentUser = null;
-
-
+    notifyListeners();
   }
+
   void setCurrentUser(User user) {
     currentUser = user;
     notifyListeners();
   }
-  
-}    
+}

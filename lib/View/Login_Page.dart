@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   String? _errorText;
+  bool _isLoading = false; // Add a loading state
   late final UserController _controller;
 
   @override
@@ -26,10 +27,21 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    // Prevent multiple login attempts while one is in progress
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+
     final id = _idController.text.trim();
     final password = _passwordController.text;
 
-    final result = await _controller.UserLogin(id, password);
+    // Use the updated userLogin method
+    final result = await _controller.userLogin(id, password);
+
+    if (!mounted) return; // Check if the widget is still in the tree
 
     if (result.isSuccess) {
       Navigator.pushReplacementNamed(context, MainTabController.routeName);
@@ -38,8 +50,11 @@ class _LoginPageState extends State<LoginPage> {
         _errorText = result.errorMessage ?? 'Login failed';
       });
     }
-  }
 
+    setState(() {
+      _isLoading = false; // Reset loading state
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(28),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 20,
@@ -135,7 +150,10 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 24),
 
-                ElevatedButton.icon(
+                // Show a progress indicator when loading
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton.icon(
                   onPressed: _handleLogin,
                   icon: const Icon(Icons.login),
                   label: const Text('Sign In'),
