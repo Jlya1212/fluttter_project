@@ -1,109 +1,132 @@
-// lib/ViewModel/TaskController.dart
-
 import 'package:flutter/foundation.dart';
 import '../Models/Task.dart';
 import '../Repository/Repository.dart';
 
-enum TaskSort { startTimeAsc, startTimeDesc }
-
 class TaskController extends ChangeNotifier {
   final Repository repository;
+
   TaskController(this.repository);
 
-  // 1) Canonical source of truth: ALL tasks.
-  List<Task> _allTasksRaw = [];
-
-  // 2) Current UI state: filter + sort.
+  List<Task> _allTasks = [];
   TaskStatus _currentFilter = TaskStatus.all;
   TaskSort _sort = TaskSort.startTimeAsc;
 
-  // ---------------- Getters ----------------
-
-  /// Tasks after applying current filter and sort.
   List<Task> get filteredTasks {
-    final Iterable<Task> filtered = _currentFilter == TaskStatus.all
-        ? _allTasksRaw
-        : _allTasksRaw.where((t) => t.status == _currentFilter);
+    List<Task> tasks;
+    if (_currentFilter == TaskStatus.all) {
+      tasks = List.from(_allTasks);
+    } else {
+      tasks = _allTasks.where((t) => t.status == _currentFilter).toList();
+    }
 
-    // Return a sorted copy so we don't mutate the raw list order.
-    final List<Task> sorted = List<Task>.from(filtered);
-    sorted.sort((a, b) {
-      final cmp = a.startTime.compareTo(b.startTime);
-      return _sort == TaskSort.startTimeAsc ? cmp : -cmp;
+    tasks.sort((a, b) {
+      if (_sort == TaskSort.startTimeAsc) {
+        return a.startTime.compareTo(b.startTime);
+      } else {
+        return b.startTime.compareTo(a.startTime);
+      }
     });
-    return sorted;
+
+    return tasks;
   }
 
-  /// Expose all tasks for tab badges to count properly.
-  List<Task> get allTasks => _allTasksRaw;
+  List<Task> get allTasks => _allTasks;
 
   TaskStatus get currentFilter => _currentFilter;
   TaskSort get sort => _sort;
 
   int get pendingTaskCount =>
-      _allTasksRaw.where((t) => t.status == TaskStatus.pending).length;
+      _allTasks.where((t) => t.status == TaskStatus.pending).length;
 
   int get inProgressTaskCount =>
-      _allTasksRaw.where((t) => t.status == TaskStatus.inProgress).length;
+      _allTasks.where((t) => t.status == TaskStatus.inProgress).length;
 
   int get completedTaskCount =>
-      _allTasksRaw.where((t) => t.status == TaskStatus.completed).length;
+      _allTasks.where((t) => t.status == TaskStatus.completed).length;
 
-  // ---------------- Commands ----------------
-
-  /// Load all tasks, then apply a UI filter.
-  /// Assumption: repository can return all tasks when asked with TaskStatus.all.
   Future<void> loadTasksAndSetFilter(TaskStatus status) async {
     try {
-      // Always fetch ALL tasks so counts and filters remain consistent.
       final result = await repository.getTasksByStatus(TaskStatus.all);
 
       if (result.isSuccess) {
-        _allTasksRaw = result.data ?? [];
+        _allTasks = result.data ?? [];
         _currentFilter = status;
         notifyListeners();
       } else {
-        if (kDebugMode) {
-          print("Load failed: ${result.errorMessage}");
-        }
+        print("Load failed: ${result.errorMessage}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Controller failed to fetch tasks: ${e.toString()}');
-      }
+      print('Controller failed to fetch tasks: ${e.toString()}');
     }
   }
 
-  /// Update a single task's status in-place.
-  void updateTaskStatus(String taskCode, TaskStatus newStatus) {
-    final idx = _allTasksRaw.indexWhere((task) => task.taskCode == taskCode);
-    if (idx != -1) {
-      final old = _allTasksRaw[idx];
-      _allTasksRaw[idx] = Task(
-        taskName: old.taskName,
-        taskCode: old.taskCode,
-        fromLocation: old.fromLocation,
-        toLocation: old.toLocation,
-        itemDescription: old.itemDescription,
-        itemCount: old.itemCount,
-        startTime: old.startTime,
-        deadline: old.deadline,
-        status: newStatus,
-        ownerId: old.ownerId,
-        confirmationPhoto: old.confirmationPhoto,
-        confirmationSign: old.confirmationSign,
+  // New method to handle the full confirmation process
+  void confirmDelivery(String taskCode, String signature, String photoUrl, DateTime completionTime) {
+    final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+
+    if (taskIndex != -1) {
+      final oldTask = _allTasks[taskIndex];
+      _allTasks[taskIndex] = Task(
+        taskName: oldTask.taskName,
+        taskCode: oldTask.taskCode,
+        fromLocation: oldTask.fromLocation,
+        toLocation: oldTask.toLocation,
+        itemDescription: oldTask.itemDescription,
+        itemCount: oldTask.itemCount,
+        startTime: oldTask.startTime,
+        deadline: oldTask.deadline,
+        status: TaskStatus.completed, // Set status to completed
+        ownerId: oldTask.ownerId,
+        confirmationSign: signature,   // Set signature
+        confirmationPhoto: photoUrl,   // Set photo
+        completionTime: completionTime, // Set completion time
+        customerName: oldTask.customerName,
+        partDetails: oldTask.partDetails,
+        destinationAddress: oldTask.destinationAddress,
+        estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
+        specialInstructions: oldTask.specialInstructions,
+        deliveryNotes: oldTask.deliveryNotes,
       );
       notifyListeners();
     }
   }
 
-  /// Just switch the filter; data is already in memory.
+  // Updated this method to preserve new fields
+  void updateTaskStatus(String taskCode, TaskStatus newStatus) {
+    final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+
+    if (taskIndex != -1) {
+      final oldTask = _allTasks[taskIndex];
+      _allTasks[taskIndex] = Task(
+        taskName: oldTask.taskName,
+        taskCode: oldTask.taskCode,
+        fromLocation: oldTask.fromLocation,
+        toLocation: oldTask.toLocation,
+        itemDescription: oldTask.itemDescription,
+        itemCount: oldTask.itemCount,
+        startTime: oldTask.startTime,
+        deadline: oldTask.deadline,
+        status: newStatus,
+        ownerId: oldTask.ownerId,
+        confirmationPhoto: oldTask.confirmationPhoto,
+        confirmationSign: oldTask.confirmationSign,
+        completionTime: oldTask.completionTime,
+        customerName: oldTask.customerName,
+        partDetails: oldTask.partDetails,
+        destinationAddress: oldTask.destinationAddress,
+        estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
+        specialInstructions: oldTask.specialInstructions,
+        deliveryNotes: oldTask.deliveryNotes,
+      );
+      notifyListeners();
+    }
+  }
+
   void setFilter(TaskStatus status) {
     _currentFilter = status;
     notifyListeners();
   }
 
-  /// Set sort order and refresh listeners.
   void setSort(TaskSort newSort) {
     if (_sort != newSort) {
       _sort = newSort;
@@ -111,3 +134,4 @@ class TaskController extends ChangeNotifier {
     }
   }
 }
+

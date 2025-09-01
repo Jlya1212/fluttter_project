@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/Repository/MockUpRepository.dart';
 import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
 import 'package:fluttter_project/ViewModel/TaskController.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +49,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
               ),
             ),
             actions: [
-              // 1. This code adds a sort popup to choose sort order by start time.
+              // This code adds a sort popup to choose sort order by start time.
               PopupMenuButton<TaskSort>(
                 tooltip: 'Sort by start time',
                 icon: const Icon(Icons.sort, color: Colors.black),
@@ -87,12 +86,12 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                   ],
                 ),
               ),
-              // 2. This code shows current sort hint under tabs (optional UX sugar).
+              // This code shows current sort hint under tabs.
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                 child: Row(
                   children: [
-                    const Icon(Icons.schedule, size: 16),
+                    const Icon(Icons.info_outline, size: 14, color: Colors.grey),
                     const SizedBox(width: 6),
                     Text(
                       controller.sort == TaskSort.startTimeAsc
@@ -108,24 +107,24 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                 child: tasks.isEmpty
                     ? const Center(child: Text('No tasks found'))
                     : ListView.builder(
-                        itemCount: tasks.length,
-                        itemBuilder: (context, index) {
-                          final task = tasks[index];
-                          return TaskCard(
-                            task: task,
-                            onTap: () async {
-                              final newStatus = await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => PartRequestDetailsPage(task: task),
-                                ),
-                              );
-                              if (newStatus != null && newStatus is TaskStatus) {
-                                controller.updateTaskStatus(task.taskCode, newStatus);
-                              }
-                            },
-                          );
-                        },
-                      ),
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return TaskCard(
+                      task: task,
+                      onTap: () async {
+                        final newStatus = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PartRequestDetailsPage(task: task),
+                          ),
+                        );
+                        if (newStatus != null && newStatus is TaskStatus) {
+                          controller.updateTaskStatus(task.taskCode, newStatus);
+                        }
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -134,17 +133,19 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
     );
   }
 
-  // unchanged tabs...
   Widget _buildTab(String title, TaskStatus status) {
-    final isSelected = _controller.currentFilter == status;
+    // Reading controller here for tab state, but not listening to rebuild the whole page
+    final controller = Provider.of<TaskController>(context);
+    final isSelected = controller.currentFilter == status;
     final count = status == TaskStatus.all
-        ? _controller.allTasks.length
-        : _controller.allTasks.where((t) => t.status == status).length;
+        ? controller.allTasks.length
+        : controller.allTasks.where((t) => t.status == status).length;
 
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          _controller.loadTasksAndSetFilter(status);
+          // Use the controller from initState to call methods
+          _controller.setFilter(status);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -172,7 +173,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange : Colors.grey,
+                    color: isSelected ? Colors.orange.shade700 : Colors.grey.shade400,
                     shape: BoxShape.circle,
                   ),
                   child: Text(

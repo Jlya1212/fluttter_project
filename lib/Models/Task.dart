@@ -1,20 +1,33 @@
 enum TaskStatus { pending, pickedUp, inProgress, completed, all }
 
+enum TaskSort { startTimeAsc, startTimeDesc }
+
 class Task {
   final String taskName;
-  final String taskCode; // Unique code for the task
-  final String fromLocation; // From where
-  final String toLocation; // To where
-  final String itemDescription; // What to deliver
-  final int itemCount; // Number of items to deliver
-  final DateTime startTime; // Start time
-  final DateTime deadline; // Deadline to complete the task
-  final TaskStatus status; // Status enum
-  final String ownerId; // Who posted the task
-  final String? confirmationPhoto; // URL or path to a completion photo
-  final String? confirmationSign; // URL or path to a signature image
+  final String taskCode;
+  final String fromLocation;
+  final String toLocation;
+  final String itemDescription;
+  final int itemCount;
+  final DateTime startTime;
+  final DateTime deadline;
+  final TaskStatus status;
+  final String ownerId;
 
-  // can
+  // Confirmation fields
+  final String? confirmationPhoto;
+  final String? confirmationSign;
+  final DateTime? completionTime; // New field for completion timestamp
+
+  // Details fields
+  final String? customerName;
+  final String? partDetails;
+  final String? destinationAddress;
+  final int? estimatedDurationMinutes;
+  final String? specialInstructions;
+  final String? deliveryNotes;
+
+
   Task({
     required this.taskName,
     required this.taskCode,
@@ -28,9 +41,17 @@ class Task {
     required this.ownerId,
     this.confirmationPhoto,
     this.confirmationSign,
+    this.completionTime, // Add to constructor
+    this.customerName,
+    this.partDetails,
+    this.destinationAddress,
+    this.estimatedDurationMinutes,
+    this.specialInstructions,
+    this.deliveryNotes,
   });
 
-  // Optional: JSON serialization if using Firebase
+  // Since we are not using a real backend, fromJson/toJson are not strictly
+  // necessary to update, but it's good practice.
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       taskName: json['taskName'],
@@ -45,12 +66,19 @@ class Task {
       ownerId: json['ownerId'],
       confirmationPhoto: json['confirmationPhoto'],
       confirmationSign: json['confirmationSign'],
+      completionTime: json['completionTime'] != null ? DateTime.parse(json['completionTime']) : null,
+      customerName: json['customerName'],
+      partDetails: json['partDetails'],
+      destinationAddress: json['destinationAddress'],
+      estimatedDurationMinutes: json['estimatedDurationMinutes'],
+      specialInstructions: json['specialInstructions'],
+      deliveryNotes: json['deliveryNotes'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'taslName': taskName,
+      'taskName': taskName,
       'taskCode': taskCode,
       'fromLocation': fromLocation,
       'toLocation': toLocation,
@@ -62,6 +90,14 @@ class Task {
       'ownerId': ownerId,
       'confirmationPhoto': confirmationPhoto,
       'confirmationSign': confirmationSign,
+      'completionTime': completionTime?.toIso8601String(),
+      'customerName': customerName,
+      'partDetails': partDetails,
+      'destinationAddress': destinationAddress,
+      'estimatedDurationMinutes': estimatedDurationMinutes,
+      'specialInstructions': specialInstructions,
+      'deliveryNotes': deliveryNotes,
     };
   }
 }
+
