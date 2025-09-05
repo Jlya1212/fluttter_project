@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:signature/signature.dart';
 import '../Models/Task.dart';
 
 class DeliveryConfirmationPage extends StatefulWidget {
@@ -15,6 +18,14 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
   bool _isPhotoCompleted = false;
   bool _isFinalized = false;
 
+  final SignatureController _signatureController = SignatureController(
+    penStrokeWidth: 3,
+    penColor: Colors.black,
+    exportBackgroundColor: Colors.white,
+  );
+  final ImagePicker _picker = ImagePicker();
+  File? _photoFile;
+
   void _completeAndReturn() {
     if (!_isFinalized) return; // Guard clause
 
@@ -22,39 +33,71 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
     Navigator.of(context).pop({
       'status': TaskStatus.completed,
       'signature': 'Mechanic Signature Captured\nSigned by: ${widget.task.ownerId}',
-      'photoUrl': 'https://i.ibb.co/L9qj4M5/brake-disc.jpg', // Placeholder image URL
+      'photoUrl': _photoFile?.path,
       'completionTime': DateTime.now(),
     });
   }
 
   void _showSignatureDialog() {
+    _signatureController.clear();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Digital Signature'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Please have the mechanic sign below to confirm receipt.'),
-            const SizedBox(height: 20),
-            Container(
-              height: 150,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade400),
-                borderRadius: BorderRadius.circular(8),
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Digital Signature',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Please have the mechanic sign below to confirm receipt.',
+                style: TextStyle(color: Colors.black54),
+                textAlign: TextAlign.center,
               ),
-              child: const Center(child: Text('Signature Pad Area', style: TextStyle(color: Colors.grey))),
-            ),
-          ],
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 150,
+                width: double.infinity,
+                child: Signature(
+                  controller: _signatureController,
+                  backgroundColor: Colors.grey[200]!,
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Clear')),
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-          ElevatedButton(
+          TextButton(
             onPressed: () {
-              setState(() => _isSignatureCompleted = true);
+              _signatureController.clear();
+              setState(() => _isSignatureCompleted = false);
+            },
+            child: const Text('Clear', style: TextStyle(color: Colors.orange)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () async {
+              if (_signatureController.isNotEmpty) {
+                final data = await _signatureController.toPngBytes();
+                if (data != null) {
+                  setState(() => _isSignatureCompleted = true);
+                }
+              }
               Navigator.of(context).pop();
             },
             child: const Text('Confirm'),
@@ -69,35 +112,64 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Photo Confirmation'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Take a photo of the delivered parts at the workshop.'),
-            const SizedBox(height: 20),
-            Container(
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Photo Confirmation',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Take a photo of the delivered parts at the workshop.',
+                style: TextStyle(color: Colors.black54),
+                textAlign: TextAlign.center,
               ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.camera_alt_outlined, size: 48, color: Colors.grey),
-                  SizedBox(height: 8),
-                  Text('Camera preview would appear here', style: TextStyle(color: Colors.grey)),
-                ],
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 200,
+                width: double.infinity,
+                child: _photoFile == null
+                    ? const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.camera_alt_outlined, size: 48, color: Colors.grey),
+                    SizedBox(height: 8),
+                    Text('No photo selected yet',
+                        style: TextStyle(color: Colors.grey)),
+                  ],
+                )
+                    : ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(_photoFile!, fit: BoxFit.cover),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
           ElevatedButton.icon(
-            onPressed: () {
-              setState(() => _isPhotoCompleted = true);
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () async {
+              final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+              if (pickedFile != null) {
+                setState(() {
+                  _photoFile = File(pickedFile.path);
+                  _isPhotoCompleted = true;
+                });
+              }
               Navigator.of(context).pop();
             },
             icon: const Icon(Icons.camera_alt),
@@ -107,6 +179,7 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
       ),
     );
   }
+
 
   void _finalizeDelivery() {
     if (_isSignatureCompleted && _isPhotoCompleted) {
@@ -121,6 +194,12 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
         ),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _signatureController.dispose();
+    super.dispose();
   }
 
   @override
