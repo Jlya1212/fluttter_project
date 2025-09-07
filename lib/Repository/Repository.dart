@@ -9,4 +9,7 @@ abstract class Repository {
 
   // Add this new method for handling authentication
   Future<Result<auth.User>> login(String email, String password);
+
+  // Add method for updating task status
+  Future<Result<void>> updateTaskStatus(String taskCode, TaskStatus newStatus);
 }

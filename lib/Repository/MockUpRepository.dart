@@ -61,6 +61,42 @@ class MockUpRepository implements Repository {
   }
 
   @override
+  Future<Result<void>> updateTaskStatus(String taskCode, TaskStatus newStatus) async {
+    try {
+      final taskIndex = _tasks.indexWhere((task) => task.taskCode == taskCode);
+      if (taskIndex != -1) {
+        final oldTask = _tasks[taskIndex];
+        _tasks[taskIndex] = Task(
+          taskName: oldTask.taskName,
+          taskCode: oldTask.taskCode,
+          fromLocation: oldTask.fromLocation,
+          toLocation: oldTask.toLocation,
+          itemDescription: oldTask.itemDescription,
+          itemCount: oldTask.itemCount,
+          startTime: oldTask.startTime,
+          deadline: oldTask.deadline,
+          status: newStatus,
+          ownerId: oldTask.ownerId,
+          confirmationPhoto: oldTask.confirmationPhoto,
+          confirmationSign: oldTask.confirmationSign,
+          completionTime: oldTask.completionTime,
+          customerName: oldTask.customerName,
+          partDetails: oldTask.partDetails,
+          destinationAddress: oldTask.destinationAddress,
+          estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
+          specialInstructions: oldTask.specialInstructions,
+          deliveryNotes: oldTask.deliveryNotes,
+        );
+        return Result.success(null);
+      } else {
+        return Result.failure('Task not found with code: $taskCode');
+      }
+    } catch (e) {
+      return Result.failure('Error updating task status: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<Result<User>> getUserByEmail(String email) async {
     try {
       final User user = _users.firstWhere((user) => user.email == email);

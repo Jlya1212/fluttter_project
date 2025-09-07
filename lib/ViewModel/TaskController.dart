@@ -91,34 +91,46 @@ class TaskController extends ChangeNotifier {
     }
   }
 
-  // Updated this method to preserve new fields
-  void updateTaskStatus(String taskCode, TaskStatus newStatus) {
-    final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+  // Updated this method to preserve new fields and sync with Firebase
+  Future<void> updateTaskStatus(String taskCode, TaskStatus newStatus) async {
+    try {
+      // Update in Firebase first
+      final result = await repository.updateTaskStatus(taskCode, newStatus);
 
-    if (taskIndex != -1) {
-      final oldTask = _allTasks[taskIndex];
-      _allTasks[taskIndex] = Task(
-        taskName: oldTask.taskName,
-        taskCode: oldTask.taskCode,
-        fromLocation: oldTask.fromLocation,
-        toLocation: oldTask.toLocation,
-        itemDescription: oldTask.itemDescription,
-        itemCount: oldTask.itemCount,
-        startTime: oldTask.startTime,
-        deadline: oldTask.deadline,
-        status: newStatus,
-        ownerId: oldTask.ownerId,
-        confirmationPhoto: oldTask.confirmationPhoto,
-        confirmationSign: oldTask.confirmationSign,
-        completionTime: oldTask.completionTime,
-        customerName: oldTask.customerName,
-        partDetails: oldTask.partDetails,
-        destinationAddress: oldTask.destinationAddress,
-        estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
-        specialInstructions: oldTask.specialInstructions,
-        deliveryNotes: oldTask.deliveryNotes,
-      );
-      notifyListeners();
+      if (result.isSuccess) {
+        // Update local state
+        final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+
+        if (taskIndex != -1) {
+          final oldTask = _allTasks[taskIndex];
+          _allTasks[taskIndex] = Task(
+            taskName: oldTask.taskName,
+            taskCode: oldTask.taskCode,
+            fromLocation: oldTask.fromLocation,
+            toLocation: oldTask.toLocation,
+            itemDescription: oldTask.itemDescription,
+            itemCount: oldTask.itemCount,
+            startTime: oldTask.startTime,
+            deadline: oldTask.deadline,
+            status: newStatus,
+            ownerId: oldTask.ownerId,
+            confirmationPhoto: oldTask.confirmationPhoto,
+            confirmationSign: oldTask.confirmationSign,
+            completionTime: oldTask.completionTime,
+            customerName: oldTask.customerName,
+            partDetails: oldTask.partDetails,
+            destinationAddress: oldTask.destinationAddress,
+            estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
+            specialInstructions: oldTask.specialInstructions,
+            deliveryNotes: oldTask.deliveryNotes,
+          );
+          notifyListeners();
+        }
+      } else {
+        print("Failed to update task status: ${result.errorMessage}");
+      }
+    } catch (e) {
+      print('Controller failed to update task status: ${e.toString()}');
     }
   }
 

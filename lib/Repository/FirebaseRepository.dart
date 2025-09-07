@@ -70,5 +70,30 @@ class FirebaseRepository implements Repository {
       return Result.failure(e.message ?? 'An unknown login error occurred.');
     }
   }
+
+  @override
+  Future<Result<void>> updateTaskStatus(String taskCode, TaskStatus newStatus) async {
+    try {
+      // Find the task document by taskCode
+      final querySnapshot = await _firestore
+          .collection('tasks')
+          .where('taskCode', isEqualTo: taskCode)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+        await _firestore.collection('tasks').doc(docId).update({
+          'status': newStatus.name,
+          'lastUpdated': Timestamp.fromDate(DateTime.now()),
+        });
+        return Result.success(null);
+      } else {
+        return Result.failure('Task not found with code: $taskCode');
+      }
+    } catch (e) {
+      return Result.failure('Error updating task status: ${e.toString()}');
+    }
+  }
 }
 
