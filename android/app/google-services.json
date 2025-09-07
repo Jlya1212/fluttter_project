@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "694432095218",
+    "project_id": "part-delivery-app",
+    "storage_bucket": "part-delivery-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:694432095218:android:bd332be60f8bce5d4d696b",
+        "android_client_info": {
+          "package_name": "com.example.fluttter_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjAhk77zU_7fUiQ3rl94ZSU0nIVRNp6co"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
