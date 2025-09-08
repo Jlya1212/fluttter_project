@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../Models/Task.dart';
 import '../Repository/Repository.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class TaskController extends ChangeNotifier {
   final Repository repository;
@@ -60,43 +62,60 @@ class TaskController extends ChangeNotifier {
     }
   }
 
-  // New method to handle the full confirmation process
-  void confirmDelivery(String taskCode, String signature, String photoUrl, DateTime completionTime) {
-    final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+  Future<void> confirmDelivery(
+      String taskCode,
+      Uint8List? mechanicSignature,
+      Uint8List? deliverySignature,
+      String? photoBase64,
+      DateTime completionTime,
+      ) async {
 
-    if (taskIndex != -1) {
-      final oldTask = _allTasks[taskIndex];
-      _allTasks[taskIndex] = Task(
-        taskName: oldTask.taskName,
-        taskCode: oldTask.taskCode,
-        fromLocation: oldTask.fromLocation,
-        toLocation: oldTask.toLocation,
-        itemDescription: oldTask.itemDescription,
-        itemCount: oldTask.itemCount,
-        startTime: oldTask.startTime,
-        deadline: oldTask.deadline,
-        status: TaskStatus.completed, // Set status to completed
-        ownerId: oldTask.ownerId,
-        confirmationSign: signature,   // Set signature
-        confirmationPhoto: photoUrl,   // Set photo
-        completionTime: completionTime, // Set completion time
-        customerName: oldTask.customerName,
-        partDetails: oldTask.partDetails,
-        destinationAddress: oldTask.destinationAddress,
-        estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
-        specialInstructions: oldTask.specialInstructions,
-        deliveryNotes: oldTask.deliveryNotes,
-      );
-      notifyListeners();
+    final result = await repository.confirmDelivery(
+      taskCode,
+      mechanicSignature,
+      deliverySignature,
+      photoBase64,
+      completionTime,
+    );
+
+    if (result.isSuccess) {
+      int index = allTasks.indexWhere((t) => t.taskCode == taskCode);
+      if (index != -1) {
+        Task oldTask = allTasks[index];
+        allTasks[index] = Task(
+          taskName: oldTask.taskName,
+          taskCode: oldTask.taskCode,
+          fromLocation: oldTask.fromLocation,
+          toLocation: oldTask.toLocation,
+          itemDescription: oldTask.itemDescription,
+          itemCount: oldTask.itemCount,
+          startTime: oldTask.startTime,
+          deadline: oldTask.deadline,
+          status: TaskStatus.completed,
+          ownerId: oldTask.ownerId,
+          mechanicSignature: mechanicSignature,
+          deliverySignature: deliverySignature,
+          completionTime: completionTime,
+          customerName: oldTask.customerName,
+          partDetails: oldTask.partDetails,
+          destinationAddress: oldTask.destinationAddress,
+          estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
+          specialInstructions: oldTask.specialInstructions,
+          deliveryNotes: oldTask.deliveryNotes,
+          photoBase64: photoBase64,
+        );
+        notifyListeners();
+      }
     }
+
   }
 
-  // Updated this method to preserve new fields and sync with Firebase
+
+  // Updated this method to preserve new fields
   Future<void> updateTaskStatus(String taskCode, TaskStatus newStatus) async {
     try {
       // Update in Firebase first
       final result = await repository.updateTaskStatus(taskCode, newStatus);
-
       if (result.isSuccess) {
         // Update local state
         final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
@@ -114,8 +133,8 @@ class TaskController extends ChangeNotifier {
             deadline: oldTask.deadline,
             status: newStatus,
             ownerId: oldTask.ownerId,
-            confirmationPhoto: oldTask.confirmationPhoto,
-            confirmationSign: oldTask.confirmationSign,
+            mechanicSignature: oldTask.mechanicSignature,
+            deliverySignature: oldTask.deliverySignature,
             completionTime: oldTask.completionTime,
             customerName: oldTask.customerName,
             partDetails: oldTask.partDetails,
@@ -146,4 +165,3 @@ class TaskController extends ChangeNotifier {
     }
   }
 }
-

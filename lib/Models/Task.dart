@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:typed_data';
 
 enum TaskStatus { pending, pickedUp, inProgress, completed, all }
 enum TaskSort { startTimeAsc, startTimeDesc }
@@ -6,6 +7,8 @@ enum TaskSort { startTimeAsc, startTimeDesc }
 class Task {
   final String taskName;
   final String taskCode;
+  Uint8List? mechanicSignature;
+  Uint8List? deliverySignature;
   final String fromLocation;
   final String toLocation;
   final String itemDescription;
@@ -14,8 +17,7 @@ class Task {
   final DateTime deadline;
   final TaskStatus status;
   final String ownerId;
-  final String? confirmationPhoto;
-  final String? confirmationSign;
+  final String? photoBase64;
   final DateTime? completionTime;
   final String? customerName;
   final String? partDetails;
@@ -35,8 +37,8 @@ class Task {
     required this.deadline,
     required this.status,
     required this.ownerId,
-    this.confirmationPhoto,
-    this.confirmationSign,
+    this.mechanicSignature,
+    this.deliverySignature,
     this.completionTime,
     this.customerName,
     this.partDetails,
@@ -44,9 +46,9 @@ class Task {
     this.estimatedDurationMinutes,
     this.specialInstructions,
     this.deliveryNotes,
+    this.photoBase64,
   });
 
-  // Updated fromJson to handle Firestore Timestamps
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       taskName: json['taskName'] ?? '',
@@ -55,25 +57,54 @@ class Task {
       toLocation: json['toLocation'] ?? '',
       itemDescription: json['itemDescription'] ?? '',
       itemCount: json['itemCount'] ?? 0,
-      // This is the important change: convert Timestamp to DateTime
-      startTime: (json['startTime'] as Timestamp).toDate(),
-      deadline: (json['deadline'] as Timestamp).toDate(),
+
+      // Safely convert Firestore Timestamps
+      startTime: json['startTime'] != null
+          ? (json['startTime'] as Timestamp).toDate()
+          : DateTime.now(),
+      deadline: json['deadline'] != null
+          ? (json['deadline'] as Timestamp).toDate()
+          : DateTime.now(),
+
+
+      // Convert status string → enum
       status: TaskStatus.values.firstWhere(
             (e) => e.name == json['status'],
         orElse: () => TaskStatus.pending,
       ),
+
       ownerId: json['ownerId'] ?? '',
-      confirmationPhoto: json['confirmationPhoto'],
-      confirmationSign: json['confirmationSign'],
+
+      mechanicSignature: json['mechanicSignature'] != null
+          ? (json['mechanicSignature'] is Blob
+          ? (json['mechanicSignature'] as Blob).bytes
+          : null)
+          : null,
+
+      deliverySignature: json['deliverySignature'] != null
+          ? (json['deliverySignature'] is Blob
+          ? (json['deliverySignature'] as Blob).bytes
+          : null)
+          : null,
+
+
+      // ✅ Strings
+      customerName: json['customerName'] as String?,
+      partDetails: json['partDetails'] as String?,
+      destinationAddress: json['destinationAddress'] as String?,
+      specialInstructions: json['specialInstructions'] as String?,
+      deliveryNotes: json['deliveryNotes'] as String?,
+      photoBase64: json['photoBase64'] as String?,
+
+      // ✅ Numbers (force to int)
+      estimatedDurationMinutes: json['estimatedDurationMinutes'] != null
+          ? (json['estimatedDurationMinutes'] as num).toInt()
+          : null,
+
+      // ✅ Photo and completion time
       completionTime: json['completionTime'] != null
           ? (json['completionTime'] as Timestamp).toDate()
           : null,
-      customerName: json['customerName'],
-      partDetails: json['partDetails'],
-      destinationAddress: json['destinationAddress'],
-      estimatedDurationMinutes: json['estimatedDurationMinutes'],
-      specialInstructions: json['specialInstructions'],
-      deliveryNotes: json['deliveryNotes'],
     );
   }
 
@@ -90,8 +121,10 @@ class Task {
       'deadline': Timestamp.fromDate(deadline),
       'status': status.name,
       'ownerId': ownerId,
-      'confirmationPhoto': confirmationPhoto,
-      'confirmationSign': confirmationSign,
+      'mechanicSignature':
+      mechanicSignature != null ? Blob(mechanicSignature!) : null,
+      'deliverySignature':
+      deliverySignature != null ? Blob(deliverySignature!) : null,
       'completionTime': completionTime != null ? Timestamp.fromDate(completionTime!) : null,
       'customerName': customerName,
       'partDetails': partDetails,
@@ -99,7 +132,7 @@ class Task {
       'estimatedDurationMinutes': estimatedDurationMinutes,
       'specialInstructions': specialInstructions,
       'deliveryNotes': deliveryNotes,
+      'photoBase64': photoBase64,
     };
   }
 }
-

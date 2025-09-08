@@ -4,6 +4,7 @@ import 'Repository.dart';
 import '../Models/Task.dart';
 import '../Models/User.dart';
 import '../common/Result.dart';
+import 'dart:typed_data';
 
 class FirebaseRepository implements Repository {
   // Get instances of Firestore and Firebase Auth
@@ -93,6 +94,56 @@ class FirebaseRepository implements Repository {
       }
     } catch (e) {
       return Result.failure('Error updating task status: ${e.toString()}');
+    }
+  }
+  Future<Result<void>> confirmDelivery(
+      String taskCode,
+      Uint8List? mechanicSignature,
+      Uint8List? deliverySignature,
+      String? photoBase64,
+      DateTime completionTime,
+      ) async {
+    try {
+      final query = await _firestore
+          .collection('tasks')
+          .where('taskCode', isEqualTo: taskCode)
+          .limit(1)
+          .get();
+
+      if (query.docs.isEmpty) {
+        return Result.failure('Task not found for taskCode: $taskCode');
+      }
+
+      final taskDoc = query.docs.first.reference;
+
+      // 🔹 Build update map conditionally
+      final Map<String, dynamic> updates = {
+        'completionTime': Timestamp.fromDate(completionTime),
+        'status': TaskStatus.completed.name,
+      };
+
+      if (mechanicSignature != null) {
+        updates['mechanicSignature'] = Blob(mechanicSignature);
+      }
+      if (deliverySignature != null) {
+        updates['deliverySignature'] = Blob(deliverySignature);
+      }
+      if (photoBase64 != null) {
+        updates['photoBase64'] = photoBase64;
+      }
+
+      await taskDoc.update({
+        'mechanicSignature': mechanicSignature != null ? Blob(mechanicSignature) : null,
+        'deliverySignature': deliverySignature != null ? Blob(deliverySignature) : null,
+        'photoBase64': photoBase64,
+        'completionTime': Timestamp.fromDate(completionTime),
+        'status': TaskStatus.completed.name,
+      });
+
+
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure('Error confirming delivery: ${e.toString()}');
     }
   }
 }

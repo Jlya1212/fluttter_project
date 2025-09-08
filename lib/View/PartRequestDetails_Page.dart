@@ -4,6 +4,9 @@ import 'package:fluttter_project/View/DeliveryConfirmation_Page.dart';
 import 'package:fluttter_project/ViewModel/TaskController.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PartRequestDetailsPage extends StatefulWidget {
   final Task task;
@@ -13,7 +16,6 @@ class PartRequestDetailsPage extends StatefulWidget {
   @override
   _PartRequestDetailsPageState createState() => _PartRequestDetailsPageState();
 }
-
 class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
   @override
   Widget build(BuildContext context) {
@@ -42,11 +44,13 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
                   const SizedBox(height: 20),
 
                   // If completed, show the confirmation details
-                  if (task.status == TaskStatus.completed) ...[
+                  if (task.status == TaskStatus.completed ||
+                      task.mechanicSignature != null ||
+                      task.deliverySignature != null ||
+                      (task.photoBase64 != null && task.photoBase64!.isNotEmpty)) ...[
                     _buildDeliveryConfirmationSection(task),
                     const SizedBox(height: 20),
                   ],
-
                   _buildPartDetailsSection(task),
                   const SizedBox(height: 20),
                   _buildDestinationInfoSection(task),
@@ -114,8 +118,9 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
     if (result != null) {
       controller.confirmDelivery(
         task.taskCode,
-        result['signature'],
-        result['photoUrl'],
+        result['mechanicSignature'],
+        result['deliverySignature'],
+        result['photoFile'],
         result['completionTime'],
       );
     }
@@ -233,94 +238,167 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
 
 
   Widget _buildDeliveryConfirmationSection(Task task) {
-    return _buildCard(
+
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('deliveries')
+          .doc(task.taskCode)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const SizedBox.shrink();
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+
+        // Signatures already in Task model
+        final mechanicSignature = task.mechanicSignature;
+        final deliverySignature = task.deliverySignature;
+
+        // Get photoBase64 from Firestore
+        Uint8List? photoBytes;
+        if (data['photoBase64'] != null && (data['photoBase64'] as String).isNotEmpty) {
+          photoBytes = base64Decode(data['photoBase64']);
+        }
+
+        return _buildCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Delivery Confirmation',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+
+              // ✅ Completed status
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green.shade700),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Delivery Completed',
+                            style: TextStyle(
+                                color: Colors.green.shade800,
+                                fontWeight: FontWeight.bold)),
+                        if (task.completionTime != null)
+                          Text(
+                            DateFormat('yyyy-MM-dd hh:mm a')
+                                .format(task.completionTime!),
+                            style: TextStyle(
+                                color: Colors.green.shade700, fontSize: 12),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Mechanic Signature
+              if (mechanicSignature != null) ...[
+                _buildSignatureCard(
+                    title: "Mechanic Signature",
+                    icon: Icons.draw,
+                    color: Colors.blue,
+                    image: mechanicSignature),
+                const SizedBox(height: 16),
+              ],
+
+              // Delivery Signature
+              if (deliverySignature != null) ...[
+                _buildSignatureCard(
+                    title: "Delivery Signature",
+                    icon: Icons.person,
+                    color: Colors.green,
+                    image: deliverySignature),
+                const SizedBox(height: 16),
+              ],
+
+              // ✅ Photo from Firestore
+              if (photoBytes != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.purple.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.camera_alt, color: Colors.purple.shade700),
+                          const SizedBox(width: 8),
+                          Text("Confirmation Photo",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.purple.shade700)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          photoBytes,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSignatureCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required Uint8List image,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Delivery Confirmation', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle, color: Colors.green.shade700),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Delivery Completed', style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.bold)),
-                    if (task.completionTime != null)
-                      Text(DateFormat('yyyy-MM-dd hh:mm a').format(task.completionTime!), style: TextStyle(color: Colors.green.shade700, fontSize: 12)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildConfirmationDetailItem(
-            icon: Icons.draw,
-            iconColor: Colors.blue.shade700,
-            title: 'Digital Signature',
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade200),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.edit, color: Colors.grey.shade600, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      task.confirmationSign ?? 'No signature captured.',
-                      style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.black87),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildConfirmationDetailItem(
-            icon: Icons.camera_alt,
-            iconColor: Colors.purple.shade700,
-            title: 'Delivery Photo',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    task.confirmationPhoto ?? 'https://via.placeholder.com/400x200?text=No+Photo',
-                    height: 150,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) => progress == null ? child : const Center(child: CircularProgressIndicator()),
-                    errorBuilder: (context, error, stack) => const Icon(Icons.error),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Parts delivered and documented at ${task.toLocation}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
           Row(
             children: [
-              _buildTag(text: 'Confirmed By\n${task.ownerId}', backgroundColor: Colors.blue, textColor: Colors.blue.shade800),
-              const SizedBox(width: 12),
-              _buildTag(text: 'Workshop\n${task.toLocation.split(' - ').last}', backgroundColor: Colors.orange, textColor: Colors.orange.shade800),
+              Icon(icon, color: Color(0xFF1976D2)),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1976D2))),
             ],
           ),
+          const SizedBox(height: 12),
+          Image.memory(image, height: 120, fit: BoxFit.contain),
         ],
       ),
     );
@@ -638,4 +716,3 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
     );
   }
 }
-
