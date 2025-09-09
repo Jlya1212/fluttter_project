@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:fluttter_project/ViewModel/TaskController.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
+import 'package:fluttter_project/ViewModel/UserController.dart';
 import '../Models/Task.dart';
 
 class HomePage extends StatefulWidget {
@@ -33,21 +34,35 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    }
+    if (hour < 18) {
+      return 'Good Afternoon';
+    }
+    return 'Good Evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     // Use a Consumer to listen to changes in TaskController
-    return Consumer<TaskController>(
-      builder: (context, controller, child) {
+    return Consumer2<TaskController, UserController>(
+      builder: (context, taskController, userController, child) {
         return Scaffold(
           backgroundColor: const Color(0xFFF4F6F8),
-          appBar: _buildAppBar(controller),
+          appBar: _buildAppBar(taskController, userController),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSummarySection(controller),
+                _buildSummarySection(taskController),
                 const SizedBox(height: 24),
+                _buildProgressSection(taskController),
+                const SizedBox(height: 24),
+
                 _buildJobFunctionsSection(),
               ],
             ),
@@ -58,11 +73,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Custom AppBar like in the screenshot
-  AppBar _buildAppBar(TaskController controller) {
+  AppBar _buildAppBar(TaskController taskController, UserController userController) {
+    final userName = userController.currentUser?.username ?? 'User';
+    final greeting = _getGreeting();
+
     return AppBar(
       backgroundColor: const Color(0xFFF4F6F8),
       elevation: 0,
-      titleSpacing: 0,
+      automaticallyImplyLeading: false,
+      titleSpacing: 16.0,
       title: Row(
         children: [
           Container(
@@ -72,23 +91,23 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              Icons.local_shipping,
+              Icons.person_pin_circle_outlined, // A more personalized icon
               color: Colors.grey.shade700,
             ),
           ),
           const SizedBox(width: 12),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Job Management',
-                style: TextStyle(
+                '$greeting, $userName', // The new dynamic greeting
+                style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.bold,
                     fontSize: 18),
               ),
-              Text(
-                'Part Delivery Personnel',
+              const Text(
+                "Here's your summary for today.", // A new, more friendly subtitle
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
@@ -97,9 +116,10 @@ class _HomePageState extends State<HomePage> {
       ),
       actions: [
         IconButton(
+          tooltip: "Refresh Data",
           icon: Icon(Icons.refresh, color: Colors.grey.shade600),
           onPressed: () {
-            controller.loadTasksAndSetFilter(TaskStatus.all);
+            taskController.loadTasksAndSetFilter(TaskStatus.all);
           },
         ),
       ],
@@ -162,6 +182,47 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
+
+
+  Widget _buildProgressSection(TaskController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Daily Progress", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 1, blurRadius: 10)],
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Tasks Completed: ${controller.completedTaskCount} of ${controller.allTasks.length}", style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text("${(controller.completionPercentage * 100).toStringAsFixed(0)}%", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: controller.completionPercentage,
+                  minHeight: 12,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                ),
+              ),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
 
 
   Widget _buildSummaryItem(

@@ -49,6 +49,27 @@ class TaskController extends ChangeNotifier {
   int get completedTaskCount =>
       _allTasks.where((t) => t.status == TaskStatus.completed).length;
 
+
+  Task? get nextTask {
+    // Filter for tasks that are not yet completed
+    final upcomingTasks = _allTasks
+        .where((task) => task.status == TaskStatus.pending || task.status == TaskStatus.pickedUp)
+        .toList();
+
+    // Sort them by start time to find the earliest one
+    upcomingTasks.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    // Return the first one, or null if there are no upcoming tasks
+    return upcomingTasks.isNotEmpty ? upcomingTasks.first : null;
+  }
+
+  double get completionPercentage {
+    if (_allTasks.isEmpty) {
+      return 0.0;
+    }
+    return completedTaskCount / _allTasks.length;
+  }
+
   Future<void> loadTasksAndSetFilter(TaskStatus status) async {
     try {
       final result = await repository.getTasksByStatus(TaskStatus.all);
