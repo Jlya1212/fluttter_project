@@ -139,6 +139,12 @@ class _HomePageState extends State<HomePage> {
                 count: controller.pendingTaskCount,
               ),
               _buildSummaryItem(
+                icon: Icons.inventory_2_outlined, // Icon for "Picked Up"
+                color: Colors.blue, // A distinct color like blue
+                label: 'Picked Up',
+                count: controller.pickedUpTaskCount,
+              ),
+              _buildSummaryItem(
                 icon: Icons.local_shipping,
                 color: Colors.orange,
                 label: 'En Route',

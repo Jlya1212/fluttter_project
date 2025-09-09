@@ -40,6 +40,9 @@ class TaskController extends ChangeNotifier {
   int get pendingTaskCount =>
       _allTasks.where((t) => t.status == TaskStatus.pending).length;
 
+  int get pickedUpTaskCount =>
+      _allTasks.where((t) => t.status == TaskStatus.pickedUp).length;
+
   int get inProgressTaskCount =>
       _allTasks.where((t) => t.status == TaskStatus.inProgress).length;
 
