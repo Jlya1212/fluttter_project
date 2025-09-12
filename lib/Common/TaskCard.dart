@@ -116,22 +116,14 @@ class TaskCard extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6C63FF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
+                          if (task.status != TaskStatus.completed)
+                            Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.schedule,
                                   size: 12,
-                                  color: const Color(0xFF6C63FF),
+                                  color: Color(0xFF6C63FF),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -144,7 +136,7 @@ class TaskCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          ),
+
                           const SizedBox(width: 12),
                           _buildActionButton(),
                         ],
