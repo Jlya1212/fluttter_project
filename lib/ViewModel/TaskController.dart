@@ -70,9 +70,9 @@ class TaskController extends ChangeNotifier {
     return completedTaskCount / _allTasks.length;
   }
 
-  Future<void> loadTasksAndSetFilter(TaskStatus status) async {
+  Future<void> loadTasksAndSetFilter(TaskStatus status , String? assignDriverName,) async {
     try {
-      final result = await repository.getTasksByStatus(TaskStatus.all);
+      final result = await repository.getTasksByStatus(TaskStatus.all , assignDriverName!);
 
       if (result.isSuccess) {
         _allTasks = result.data ?? [];

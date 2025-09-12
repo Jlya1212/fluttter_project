@@ -32,18 +32,23 @@ class FirebaseRepository implements Repository {
   }
 
   @override
-  Future<Result<List<Task>>> getTasksByStatus(TaskStatus status) async {
+  Future<Result<List<Task>>> getTasksByStatus(
+      TaskStatus status, String? assignDriverName,) async {
     try {
-      // Create a query against the "tasks" collection
       Query query = _firestore.collection('tasks');
 
-      // If the filter is not "all", add a where clause
+      // filter by status (skip if 'all')
       if (status != TaskStatus.all) {
         query = query.where('status', isEqualTo: status.name);
       }
 
+      // filter by assigned driver name (skip if null/empty)
+      if (assignDriverName != null && assignDriverName.isNotEmpty) {
+        query = query.where('assignDriverName', isEqualTo: assignDriverName);
+      }
+
       final querySnapshot = await query.get();
-      // Map the documents from Firestore into our Task objects
+
       final tasks = querySnapshot.docs
           .map((doc) => Task.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
@@ -53,6 +58,7 @@ class FirebaseRepository implements Repository {
       return Result.failure('Error fetching tasks: ${e.toString()}');
     }
   }
+
 
   // A new method for handling actual user login with Firebase Auth
   @override
@@ -146,5 +152,16 @@ class FirebaseRepository implements Repository {
       return Result.failure('Error confirming delivery: ${e.toString()}');
     }
   }
+  @override
+  Future<Result<bool>> addTaskToDB(Task task) async {
+    try {
+      await _firestore.collection('tasks').doc(task.taskCode).set(task.toJson());
+      return Result.success(true);
+    } catch (e) {
+      return Result.failure("Failed to add task: ${e.toString()}");
+    }
+  }
+
+
 }
 

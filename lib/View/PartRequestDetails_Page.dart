@@ -451,7 +451,7 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
           const Divider(),
           _detailRowWithBadge('Quantity:', task.itemCount.toString()),
           const Divider(),
-          _detailRow('Vehicle:', task.itemDescription),
+          _detailRow('Task Details:', task.itemDescription),
           if (task.customerName != null) ...[
             const Divider(),
             _detailRow('Customer:', task.customerName!),

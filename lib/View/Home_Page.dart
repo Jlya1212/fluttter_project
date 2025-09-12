@@ -27,12 +27,17 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Load the task data when the page is first loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TaskController>(context, listen: false)
-          .loadTasksAndSetFilter(TaskStatus.all);
+      final userController = Provider.of<UserController>(context, listen: false);
+      final taskController = Provider.of<TaskController>(context, listen: false);
+
+      taskController.loadTasksAndSetFilter(
+        TaskStatus.all,
+        userController.currentUser?.username, // pass driver name
+      );
     });
   }
+
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -119,7 +124,7 @@ class _HomePageState extends State<HomePage> {
           tooltip: "Refresh Data",
           icon: Icon(Icons.refresh, color: Colors.grey.shade600),
           onPressed: () {
-            taskController.loadTasksAndSetFilter(TaskStatus.all);
+            taskController.loadTasksAndSetFilter(TaskStatus.all ,  userController.currentUser?.username,); // here need to be fix
           },
         ),
       ],

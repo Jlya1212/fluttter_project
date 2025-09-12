@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
 import 'package:fluttter_project/ViewModel/TaskController.dart';
+import 'package:fluttter_project/ViewModel/UserController.dart';
 import 'package:provider/provider.dart';
 import '../Common/TaskCard.dart';
 import '../Models/Task.dart';
+import '../Models/User.dart';
 
 
 class DeliverySchedulePage extends StatefulWidget {
@@ -17,13 +19,31 @@ class DeliverySchedulePage extends StatefulWidget {
 
 class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
   late final TaskController _controller;
+  late final UserController _userController;
+
+  User? _currentUser;
 
   @override
   void initState() {
     super.initState();
     _controller = Provider.of<TaskController>(context, listen: false);
-    _controller.loadTasksAndSetFilter(TaskStatus.all);
+    _userController = Provider.of<UserController>(context, listen: false);
+
+    // Now safely unwrap the Result<User>
+    final result = _userController.getCurrentUser();
+    if (result.isSuccess) {
+      _currentUser = result.data;
+      // Load tasks for this user
+      _controller.loadTasksAndSetFilter(
+        TaskStatus.all,
+        _currentUser?.username,
+      );
+    } else {
+      // No user logged in, handle gracefully
+      debugPrint("No user logged in: ${result.errorMessage}");
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {

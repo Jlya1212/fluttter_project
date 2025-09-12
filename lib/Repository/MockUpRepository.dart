@@ -33,7 +33,7 @@ class MockUpRepository implements Repository {
   final List<User> _users = [
     User(
       id: 'user001',
-      username: '',
+      username: 'johndoe',
       email: 'johndoe',
       phone: '012-3456789',
       password: 'password123',
@@ -48,7 +48,7 @@ class MockUpRepository implements Repository {
   ];
 
   @override
-  Future<Result<List<Task>>> getTasksByStatus(TaskStatus status) async {
+  Future<Result<List<Task>>> getTasksByStatus(TaskStatus status,String? assignDriverName,) async {
     try {
       if (status == TaskStatus.all) {
         return Result.success(_tasks);

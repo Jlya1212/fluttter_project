@@ -25,6 +25,8 @@ class Task {
   final int? estimatedDurationMinutes;
   final String? specialInstructions;
   final String? deliveryNotes;
+  // need to add one more field : ASSIGN DELIVERY NAME
+  final String? assignDriverName ;
 
   Task({
     required this.taskName,
@@ -47,6 +49,7 @@ class Task {
     this.specialInstructions,
     this.deliveryNotes,
     this.photoBase64,
+    this.assignDriverName
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -58,7 +61,6 @@ class Task {
       itemDescription: json['itemDescription'] ?? '',
       itemCount: json['itemCount'] ?? 0,
 
-      // Safely convert Firestore Timestamps
       startTime: json['startTime'] != null
           ? (json['startTime'] as Timestamp).toDate()
           : DateTime.now(),
@@ -66,8 +68,6 @@ class Task {
           ? (json['deadline'] as Timestamp).toDate()
           : DateTime.now(),
 
-
-      // Convert status string → enum
       status: TaskStatus.values.firstWhere(
             (e) => e.name == json['status'],
         orElse: () => TaskStatus.pending,
@@ -87,8 +87,6 @@ class Task {
           : null)
           : null,
 
-
-      // ✅ Strings
       customerName: json['customerName'] as String?,
       partDetails: json['partDetails'] as String?,
       destinationAddress: json['destinationAddress'] as String?,
@@ -96,17 +94,18 @@ class Task {
       deliveryNotes: json['deliveryNotes'] as String?,
       photoBase64: json['photoBase64'] as String?,
 
-      // ✅ Numbers (force to int)
       estimatedDurationMinutes: json['estimatedDurationMinutes'] != null
           ? (json['estimatedDurationMinutes'] as num).toInt()
           : null,
 
-      // ✅ Photo and completion time
       completionTime: json['completionTime'] != null
           ? (json['completionTime'] as Timestamp).toDate()
           : null,
+
+      assignDriverName: json['assignDriverName'] as String?,
     );
   }
+
 
   // toJson should convert DateTime back to Timestamp for saving to Firestore
   Map<String, dynamic> toJson() {
@@ -133,6 +132,7 @@ class Task {
       'specialInstructions': specialInstructions,
       'deliveryNotes': deliveryNotes,
       'photoBase64': photoBase64,
+      'assignDriverName': assignDriverName,
     };
   }
 }

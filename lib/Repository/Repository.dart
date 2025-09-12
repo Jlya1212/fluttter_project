@@ -5,7 +5,7 @@ import '../common/Result.dart';
 import 'dart:typed_data';
 
 abstract class Repository {
-  Future<Result<List<Task>>> getTasksByStatus(TaskStatus status);
+  Future<Result<List<Task>>> getTasksByStatus(TaskStatus status , String AssignDriverName);
   Future<Result<User>> getUserByEmail(String email);
 
   // Add this new method for handling authentication
@@ -20,4 +20,7 @@ abstract class Repository {
       );
   // Add method for updating task status
   Future<Result<void>> updateTaskStatus(String taskCode, TaskStatus newStatus);
+
+  // add task to db :
+  Future<Result<bool>> addTaskToDB(Task task);
 }
