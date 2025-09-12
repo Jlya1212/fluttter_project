@@ -33,7 +33,7 @@ class MockUpRepository implements Repository {
   final List<User> _users = [
     User(
       id: 'user001',
-      username: 'JohnDoe',
+      username: '',
       email: 'johndoe',
       phone: '012-3456789',
       password: 'password123',

@@ -3,11 +3,10 @@ import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
 import '../Models/Task.dart';
 
 class TaskCard extends StatelessWidget {
-  final Task task; // get a task object
-  final VoidCallback? onTap; // optional callback for tap events
+  final Task task;
+  final VoidCallback? onTap;
 
   const TaskCard({
-    // constructor
     Key? key,
     required this.task,
     this.onTap,
@@ -15,224 +14,146 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // build the card UI
-    return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        // border radius for the card
-        side: BorderSide(
-          color: const Color(0xFFE0E0E0), // soft gray
-          width: 1,
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: InkWell(
-        // when user tapp this card area , do something :
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            // main content of the card
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                _buildStatusIndicator(),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildStatusIndicator(), // status indicator circle on right side
-                      const SizedBox(width: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              task.taskName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1A1A1A),
+                              ),
+                            ),
+                          ),
+                          _buildStatusChip(),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
                       Text(
-                        // task code on left side
-                        task.taskName,
+                        task.taskCode,
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF8E8E93),
                         ),
                       ),
-                    ],
-                  ),
-                  _buildStatusChip(), // function to build status container background color
-                ],
-              ), // first row done
-              const SizedBox(height: 12),
-              // Task name
-
-              Text(
-                task.taskCode,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(221, 194, 188, 188),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE3F2FD), // light blue background
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFE0E0E0),
-                    width: 1.5,
-                  ),
-                ),
-                child: Text(
-                  task.itemDescription,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1E1E1E),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Date and time
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100], // light background
-                      borderRadius: BorderRadius.circular(20), // rounded edges
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.calendar_today,
-                          size: 16,
-                          color: Colors.grey,
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_formatDate(task.startTime)} ${_formatTime(task.startTime)}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _getLocationBackgroundColor(),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _formatDate(task.startTime),
+                        child: Text(
+                          task.fromLocation,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: Colors.black87,
                             fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1A1A),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          _formatTime(task.startTime),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w600,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _buildUserIcon(),
+                          const SizedBox(width: 8),
+                          Text(
+                            task.ownerId,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF4A4A4A),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // Location info
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD1C4E9), // light purple background
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFE0E0E0),
-                    width: 1.5,
-                  ),
-                ),
-                child: Text(
-                  '${task.fromLocation} → ${task.toLocation}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              const Divider(
-                // This is the line
-                height: 1,
-                color: Color(0xFFBDBDBD),
-                thickness: 1,
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF81C784),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        task.ownerId,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF9575CD), // soft purple
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.access_alarms_sharp,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _randomTimeCost(),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w400,
-                        ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6C63FF).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 12,
+                                  color: const Color(0xFF6C63FF),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _randomTimeCost(),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF6C63FF),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          _buildActionButton(),
+                        ],
                       ),
                     ],
                   ),
-                  _buildActionButton(),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -240,117 +161,146 @@ class TaskCard extends StatelessWidget {
   }
 
   Widget _buildStatusIndicator() {
-    Color color;
-    switch (task.status) {
-      case TaskStatus.pending:
-        color = Colors.orange;
-        break;
-      case TaskStatus.pickedUp:
-        color = Colors.blue;
-        break;
-      case TaskStatus.inProgress:
-        color = Colors.indigo;
-        break;
-      case TaskStatus.completed:
-        color = Colors.green;
-        break;
-      case TaskStatus.all:
-      default:
-        color = Colors.grey;
-        break;
-    }
+    Color color = _getStatusColor();
     return Container(
       width: 8,
       height: 8,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
     );
   }
 
   Widget _buildStatusChip() {
-    Color backgroundColor;
-    Color textColor;
-    String statusText;
-
-    switch (task.status) {
-      case TaskStatus.pending:
-        backgroundColor = Colors.orange.shade100;
-        textColor = Colors.orange.shade800;
-        statusText = 'Pending';
-        break;
-      case TaskStatus.pickedUp:
-        backgroundColor = Colors.blue.shade100;
-        textColor = Colors.blue.shade800;
-        statusText = 'Picked Up';
-        break;
-      case TaskStatus.inProgress:
-        backgroundColor = Colors.indigo.shade100;
-        textColor = Colors.indigo.shade800;
-        statusText = 'En Route';
-        break;
-      case TaskStatus.completed:
-        backgroundColor = Colors.green.shade100;
-        textColor = Colors.green.shade800;
-        statusText = 'Completed';
-        break;
-      case TaskStatus.all:
-      default:
-        backgroundColor = Colors.grey.shade100;
-        textColor = Colors.grey.shade800;
-        statusText = 'Unknown';
-        break;
-    }
-
+    final statusInfo = _getStatusInfo();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: statusInfo['backgroundColor'],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        statusText,
+        statusInfo['text'],
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: textColor,
+          color: statusInfo['textColor'],
         ),
       ),
     );
   }
 
-  Widget _buildActionButton() {
-    IconData icon;
-    Color color;
-    switch (task.status) {
-      case TaskStatus.pending:
-        icon = Icons.play_arrow;
-        color = Colors.orange;
-        break;
-      case TaskStatus.pickedUp:
-        icon = Icons.inventory_2_outlined;
-        color = Colors.blue;
-        break;
-      case TaskStatus.inProgress:
-        icon = Icons.local_shipping;
-        color = Colors.indigo;
-        break;
-      case TaskStatus.completed:
-        icon = Icons.check_circle;
-        color = Colors.green;
-        break;
-      case TaskStatus.all:
-      default:
-        icon = Icons.more_horiz;
-        color = Colors.grey;
-        break;
-    }
+  Widget _buildUserIcon() {
     return Container(
-      padding: const EdgeInsets.all(8),
+      width: 24,
+      height: 24,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: const Color(0xFF34C759),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: const Icon(
+        Icons.person,
+        size: 14,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildActionButton() {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: _getStatusColor(),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, size: 20, color: color),
+      child: Icon(
+        _getActionIcon(),
+        size: 18,
+        color: Colors.white,
+      ),
     );
+  }
+
+  Color _getStatusColor() {
+    switch (task.status) {
+      case TaskStatus.pending:
+        return const Color(0xFFFF9500);
+      case TaskStatus.pickedUp:
+        return const Color(0xFF007AFF);
+      case TaskStatus.inProgress:
+        return const Color(0xFF6C63FF);
+      case TaskStatus.completed:
+        return const Color(0xFF34C759);
+      default:
+        return const Color(0xFF8E8E93);
+    }
+  }
+
+  Color _getLocationBackgroundColor() {
+    switch (task.status) {
+      case TaskStatus.pending:
+        return const Color(0xFFFFF4E6); // Light orange
+      case TaskStatus.pickedUp:
+        return const Color(0xFFE6F3FF); // Light blue
+      case TaskStatus.inProgress:
+        return const Color(0xFFF0EFFF); // Light purple
+      case TaskStatus.completed:
+        return const Color(0xFFE8F5E8); // Light green
+      default:
+        return const Color(0xFFF5F5F5); // Light gray
+    }
+  }
+
+  IconData _getActionIcon() {
+    switch (task.status) {
+      case TaskStatus.pending:
+        return Icons.play_arrow;
+      case TaskStatus.pickedUp:
+        return Icons.inventory_2;
+      case TaskStatus.inProgress:
+        return Icons.local_shipping;
+      case TaskStatus.completed:
+        return Icons.check;
+      default:
+        return Icons.more_horiz;
+    }
+  }
+
+  Map<String, dynamic> _getStatusInfo() {
+    switch (task.status) {
+      case TaskStatus.pending:
+        return {
+          'text': 'Pending',
+          'backgroundColor': const Color(0xFFFFF4E6),
+          'textColor': const Color(0xFFB8860B),
+        };
+      case TaskStatus.pickedUp:
+        return {
+          'text': 'Picked Up',
+          'backgroundColor': const Color(0xFFE6F3FF),
+          'textColor': const Color(0xFF0066CC),
+        };
+      case TaskStatus.inProgress:
+        return {
+          'text': 'En Route',
+          'backgroundColor': const Color(0xFFF0EFFF),
+          'textColor': const Color(0xFF6C63FF),
+        };
+      case TaskStatus.completed:
+        return {
+          'text': 'Completed',
+          'backgroundColor': const Color(0xFFE8F5E8),
+          'textColor': const Color(0xFF2D7A2D),
+        };
+      default:
+        return {
+          'text': 'Unknown',
+          'backgroundColor': const Color(0xFFF5F5F5),
+          'textColor': const Color(0xFF666666),
+        };
+    }
   }
 
   String _formatDate(DateTime date) {
@@ -370,6 +320,6 @@ class TaskCard extends StatelessWidget {
 
   String _randomTimeCost() {
     final random = DateTime.now().millisecondsSinceEpoch % 60;
-    return '$random min';
+    return '${random + 15} min';
   }
 }
