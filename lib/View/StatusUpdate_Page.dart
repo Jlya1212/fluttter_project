@@ -15,12 +15,11 @@ class StatusUpdate extends StatefulWidget {
 }
 
 class _StatusUpdateState extends State<StatusUpdate> {
-  String selectedFilter = 'All';
   bool _isLoading = true;
+  bool _showChecklistView = false; // Toggle between checklist and detailed view (default to detailed)
   late final UserController _userController;
   late User _currentUser;
 
-  final List<String> statusFilters = ['All', 'Pending', 'Picked Up', 'In Progress', 'Completed'];
   final List<String> statusOptions = ['Pending', 'Picked Up', 'In Progress', 'Completed'];
 
   @override
@@ -118,6 +117,398 @@ class _StatusUpdateState extends State<StatusUpdate> {
     }
   }
 
+  // Build pickup checklist summary section
+  Widget _buildPickupChecklistSummary(List<Task> tasks) {
+    final pickedUpTasks = tasks.where((task) => task.status == TaskStatus.pickedUp).length;
+    final totalTasks = tasks.length;
+    final pickupPercentage = totalTasks > 0 ? (pickedUpTasks / totalTasks) : 0.0;
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.inventory_2, color: Colors.orange, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Pickup Checklist',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                '$pickedUpTasks of $totalTasks tasks picked up',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${(pickupPercentage * 100).toStringAsFixed(0)}%',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: pickupPercentage == 1.0 ? Colors.green : Colors.green,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pickupPercentage,
+              minHeight: 6,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                pickupPercentage == 1.0 ? Colors.green : Colors.green,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build pickup checklist view with interactive checkboxes
+  Widget _buildPickupChecklistView(List<Task> tasks) {
+    // Filter to only show pending and picked up tasks
+    final checklistTasks = tasks.where((task) =>
+    task.status == TaskStatus.pending || task.status == TaskStatus.pickedUp
+    ).toList();
+
+    if (checklistTasks.isEmpty) {
+      return const Center(
+        child: Text(
+          'No pickup tasks found',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // Progress bar for checklist page
+        _buildPickupChecklistSummary(checklistTasks),
+
+        // Checklist items
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: checklistTasks.length,
+            itemBuilder: (context, index) {
+              final task = checklistTasks[index];
+              final isPickedUp = task.status == TaskStatus.pickedUp;
+              final canPickUp = task.status == TaskStatus.pending; // Only pending tasks can be picked up
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isPickedUp ? Colors.green.shade200 : Colors.grey.shade200,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.05),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      // Interactive Checkbox
+                      GestureDetector(
+                        onTap: canPickUp ? () => _handlePickupTask(task) : null,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: isPickedUp ? Colors.green : (canPickUp ? Colors.grey.shade300 : Colors.grey.shade200),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: isPickedUp ? Colors.green : (canPickUp ? Colors.grey.shade400 : Colors.grey.shade300),
+                              width: 2,
+                            ),
+                          ),
+                          child: isPickedUp
+                              ? const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 16,
+                          )
+                              : canPickUp
+                              ? null
+                              : Icon(
+                            Icons.lock,
+                            color: Colors.grey.shade500,
+                            size: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Task details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              task.taskName,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: isPickedUp ? Colors.green.shade700 : Colors.black87,
+                                decoration: isPickedUp ? TextDecoration.lineThrough : null,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              task.taskCode,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  size: 14,
+                                  color: Colors.grey.shade500,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    '${task.fromLocation} → ${task.toLocation}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Status indicator
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isPickedUp
+                              ? Colors.green.shade100
+                              : _getStatusColor(task.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _getStatusDisplayName(task.status),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isPickedUp
+                                ? Colors.green.shade700
+                                : _getStatusColor(task.status),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Handle pickup task action
+  Future<void> _handlePickupTask(Task task) async {
+    final taskController = Provider.of<TaskController>(context, listen: false);
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.inventory_2, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Confirm Pickup'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Are you sure you want to mark this task as picked up?'),
+              SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.taskName,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 4),
+                    Text('Order: ${task.taskCode}'),
+                    Text('Items: ${task.itemCount}x ${task.itemDescription}'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Confirm Pickup'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      // Update task status to picked up
+      await taskController.updateTaskStatus(task.taskCode, TaskStatus.pickedUp);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Task "${task.taskName}" marked as picked up'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  // Helper method to get status color
+  Color _getStatusColor(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.pending:
+        return Colors.orange;
+      case TaskStatus.pickedUp:
+        return Colors.blue;
+      case TaskStatus.inProgress:
+        return Colors.purple;
+      case TaskStatus.completed:
+        return Colors.green;
+      case TaskStatus.all:
+        return Colors.grey;
+    }
+  }
+
+  // Build status tab (TaskSchedule_Page style)
+  Widget _buildStatusTab(String title, TaskStatus status, TaskController controller) {
+    final isSelected = controller.currentFilter == status;
+    final count = status == TaskStatus.all
+        ? controller.allTasks.length
+        : controller.allTasks.where((t) => t.status == status).length;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          controller.setFilter(status);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isSelected ? Colors.orange : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? Colors.orange : Colors.grey,
+                ),
+              ),
+              if (count > 0) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.orange.shade700 : Colors.grey.shade400,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    count.toString(),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<TaskController>(
@@ -134,9 +525,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
         }
 
         final tasks = taskController.allTasks;
-        final filteredTasks = selectedFilter == 'All'
-            ? tasks
-            : tasks.where((task) => _getStatusDisplayName(task.status) == selectedFilter).toList();
+        final filteredTasks = taskController.filteredTasks;
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -166,6 +555,82 @@ class _StatusUpdateState extends State<StatusUpdate> {
               ],
             ),
             actions: [
+              // Toggle button for checklist/detailed view
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showChecklistView = false;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: !_showChecklistView ? Colors.orange : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.list,
+                              size: 16,
+                              color: !_showChecklistView ? Colors.white : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Detailed',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: !_showChecklistView ? Colors.white : Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showChecklistView = true;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _showChecklistView ? Colors.orange : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.checklist,
+                              size: 16,
+                              color: _showChecklistView ? Colors.white : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Pickup',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _showChecklistView ? Colors.white : Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -190,45 +655,21 @@ class _StatusUpdateState extends State<StatusUpdate> {
               const SizedBox(width: 16),
             ],
           ),
-          body: Column(
+          body: _showChecklistView
+              ? _buildPickupChecklistView(tasks) // Show pickup checklist view
+              : Column(
             children: [
-              // Status Filter Tabs
+              // Status Filter Tabs (TaskSchedule_Page style)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: statusFilters.map((filter) {
-                      bool isSelected = selectedFilter == filter;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedFilter = filter;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.orange : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected ? Colors.orange : Colors.grey.shade300,
-                              ),
-                            ),
-                            child: Text(
-                              filter,
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    _buildStatusTab('All Orders', TaskStatus.all, taskController),
+                    _buildStatusTab('Pending', TaskStatus.pending, taskController),
+                    _buildStatusTab('Picked Up', TaskStatus.pickedUp, taskController),
+                    _buildStatusTab('In Progress', TaskStatus.inProgress, taskController),
+                    _buildStatusTab('Completed', TaskStatus.completed, taskController),
+                  ],
                 ),
               ),
 
