@@ -158,5 +158,8 @@ class MockUpRepository implements Repository {
       return Result.failure('Mock confirmDelivery failed: ${e.toString()}');
     }
   }
-
+  @override
+  Future<Result<bool>> addTaskToDB(Task task) async {
+    return Result.success(true); // or whatever placeholder
+  }
 }
