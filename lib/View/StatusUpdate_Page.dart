@@ -17,8 +17,8 @@ class StatusUpdate extends StatefulWidget {
 class _StatusUpdateState extends State<StatusUpdate> {
   String selectedFilter = 'All';
   bool _isLoading = true;
-  late final UserController _Usercontroller;
-  late User _currentUser = _Usercontroller.getCurrentUser() as User;
+  late final UserController _userController;
+  late User _currentUser;
 
   final List<String> statusFilters = ['All', 'Pending', 'Picked Up', 'In Progress', 'Completed'];
   final List<String> statusOptions = ['Pending', 'Picked Up', 'In Progress', 'Completed'];
@@ -26,17 +26,33 @@ class _StatusUpdateState extends State<StatusUpdate> {
   @override
   void initState() {
     super.initState();
-    _Usercontroller = Provider.of<UserController>(context, listen: false);
-    _loadTasks();
+    _userController = Provider.of<UserController>(context, listen: false);
+    _initCurrentUserAndTasks();
+  }
+
+  Future<void> _initCurrentUserAndTasks() async {
+    // 1. Get the current user
+    final userResult = await _userController.getCurrentUser();
+    if (userResult.isSuccess && userResult.data != null) {
+      _currentUser = userResult.data!;
+    } else {
+      // handle error gracefully
+      // you can show a snackbar or navigate back
+      setState(() => _isLoading = false);
+      return;
+    }
+    // 2. Load tasks for this user
+    await _loadTasks();
   }
 
   Future<void> _loadTasks() async {
     final taskController = Provider.of<TaskController>(context, listen: false);
-    await taskController.loadTasksAndSetFilter(TaskStatus.all , _currentUser.username); // here also
+    await taskController.loadTasksAndSetFilter(TaskStatus.all, _currentUser.username);
     setState(() {
       _isLoading = false;
     });
   }
+
 
   // Helper method to convert TaskStatus enum to display string
   String _getStatusDisplayName(TaskStatus status) {
