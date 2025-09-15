@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttter_project/View/Login_Page.dart';
 import 'package:fluttter_project/Common/MainTabController.dart';
+import 'package:fluttter_project/View/DeliveryTimePromptPage.dart';
+
+import '../View/DeliveryTimePromptPage.dart';
 
 class AppRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
@@ -10,7 +13,16 @@ class AppRouter {
 
       case MainTabController.routeName:
         return MaterialPageRoute(builder: (_) => const MainTabController());
-      
+
+      case '/delivery-time-prompt':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => DeliveryTimePromptPage(
+            taskCode: args['taskCode'],
+            onDeliveryTimeSelected: args['onDeliveryTimeSelected'],
+          ),
+        );
+
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

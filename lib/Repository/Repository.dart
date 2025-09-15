@@ -23,4 +23,7 @@ abstract class Repository {
 
   // add task to db :
   Future<Result<bool>> addTaskToDB(Task task);
+
+  // update task delivery time
+  Future<Result<void>> updateTaskDeliveryTime(String taskCode, DateTime deliveryTime);
 }

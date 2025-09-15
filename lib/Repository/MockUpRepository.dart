@@ -162,4 +162,44 @@ class MockUpRepository implements Repository {
   Future<Result<bool>> addTaskToDB(Task task) async {
     return Result.success(true); // or whatever placeholder
   }
+
+  @override
+  Future<Result<void>> updateTaskDeliveryTime(String taskCode, DateTime deliveryTime) async {
+    try {
+      final taskIndex = _tasks.indexWhere((task) => task.taskCode == taskCode);
+      if (taskIndex == -1) {
+        return Result.failure('Task not found with code: $taskCode');
+      }
+
+      final oldTask = _tasks[taskIndex];
+      _tasks[taskIndex] = Task(
+        taskName: oldTask.taskName,
+        taskCode: oldTask.taskCode,
+        fromLocation: oldTask.fromLocation,
+        toLocation: oldTask.toLocation,
+        itemDescription: oldTask.itemDescription,
+        itemCount: oldTask.itemCount,
+        startTime: oldTask.startTime,
+        deadline: oldTask.deadline,
+        status: oldTask.status,
+        ownerId: oldTask.ownerId,
+        mechanicSignature: oldTask.mechanicSignature,
+        deliverySignature: oldTask.deliverySignature,
+        completionTime: oldTask.completionTime,
+        customerName: oldTask.customerName,
+        partDetails: oldTask.partDetails,
+        destinationAddress: oldTask.destinationAddress,
+        estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
+        specialInstructions: oldTask.specialInstructions,
+        deliveryNotes: oldTask.deliveryNotes,
+        photoBase64: oldTask.photoBase64,
+        assignDriverName: oldTask.assignDriverName,
+        deliveryTime: deliveryTime,
+      );
+
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure('Error updating delivery time: ${e.toString()}');
+    }
+  }
 }

@@ -27,6 +27,7 @@ class Task {
   final String? deliveryNotes;
   // need to add one more field : ASSIGN DELIVERY NAME
   final String? assignDriverName ;
+  final DateTime? deliveryTime;
 
   Task({
     required this.taskName,
@@ -49,7 +50,8 @@ class Task {
     this.specialInstructions,
     this.deliveryNotes,
     this.photoBase64,
-    this.assignDriverName
+    this.assignDriverName,
+    this.deliveryTime
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -103,6 +105,9 @@ class Task {
           : null,
 
       assignDriverName: json['assignDriverName'] as String?,
+      deliveryTime: json['deliveryTime'] != null
+          ? (json['deliveryTime'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -133,6 +138,7 @@ class Task {
       'deliveryNotes': deliveryNotes,
       'photoBase64': photoBase64,
       'assignDriverName': assignDriverName,
+      'deliveryTime': deliveryTime != null ? Timestamp.fromDate(deliveryTime!) : null,
     };
   }
 }

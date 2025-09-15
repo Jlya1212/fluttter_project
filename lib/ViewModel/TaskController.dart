@@ -188,4 +188,46 @@ class TaskController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateTaskDeliveryTime(String taskCode, DateTime deliveryTime) async {
+    try {
+      final result = await repository.updateTaskDeliveryTime(taskCode, deliveryTime);
+      if (result.isSuccess) {
+        // Update local state
+        final taskIndex = _allTasks.indexWhere((task) => task.taskCode == taskCode);
+        if (taskIndex != -1) {
+          final oldTask = _allTasks[taskIndex];
+          _allTasks[taskIndex] = Task(
+            taskName: oldTask.taskName,
+            taskCode: oldTask.taskCode,
+            fromLocation: oldTask.fromLocation,
+            toLocation: oldTask.toLocation,
+            itemDescription: oldTask.itemDescription,
+            itemCount: oldTask.itemCount,
+            startTime: oldTask.startTime,
+            deadline: oldTask.deadline,
+            status: oldTask.status,
+            ownerId: oldTask.ownerId,
+            mechanicSignature: oldTask.mechanicSignature,
+            deliverySignature: oldTask.deliverySignature,
+            completionTime: oldTask.completionTime,
+            customerName: oldTask.customerName,
+            partDetails: oldTask.partDetails,
+            destinationAddress: oldTask.destinationAddress,
+            estimatedDurationMinutes: oldTask.estimatedDurationMinutes,
+            specialInstructions: oldTask.specialInstructions,
+            deliveryNotes: oldTask.deliveryNotes,
+            photoBase64: oldTask.photoBase64,
+            assignDriverName: oldTask.assignDriverName,
+            deliveryTime: deliveryTime,
+          );
+          notifyListeners();
+        }
+      } else {
+        print("Failed to update task delivery time: ${result.errorMessage}");
+      }
+    } catch (e) {
+      print('Controller failed to update task delivery time: ${e.toString()}');
+    }
+  }
 }

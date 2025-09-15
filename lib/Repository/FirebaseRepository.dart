@@ -162,6 +162,30 @@ class FirebaseRepository implements Repository {
     }
   }
 
+  Future<Result<void>> updateTaskDeliveryTime(String taskCode, DateTime deliveryTime) async {
+    try {
+      // Find the task document by taskCode
+      final querySnapshot = await _firestore
+          .collection('tasks')
+          .where('taskCode', isEqualTo: taskCode)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final docId = querySnapshot.docs.first.id;
+        await _firestore.collection('tasks').doc(docId).update({
+          'deliveryTime': Timestamp.fromDate(deliveryTime),
+          'lastUpdated': Timestamp.fromDate(DateTime.now()),
+        });
+        return Result.success(null);
+      } else {
+        return Result.failure('Task not found with code: $taskCode');
+      }
+    } catch (e) {
+      return Result.failure('Error updating task delivery time: ${e.toString()}');
+    }
+  }
+
 
 }
 

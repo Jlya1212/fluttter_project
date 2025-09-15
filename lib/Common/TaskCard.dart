@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttter_project/View/PartRequestDetails_Page.dart';
 import '../Models/Task.dart';
+import '../Common/DeliveryTimeHelper.dart';
+import 'package:intl/intl.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
@@ -85,6 +87,27 @@ class TaskCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      if (task.deliveryTime != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.local_shipping,
+                              size: 14,
+                              color: Colors.blue[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Delivery: ${_formatDate(task.deliveryTime!)} ${_formatTime(task.deliveryTime!)}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.blue[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
@@ -116,26 +139,59 @@ class TaskCard extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
-                          if (task.status != TaskStatus.completed)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.schedule,
-                                  size: 12,
-                                  color: Color(0xFF6C63FF),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _randomTimeCost(),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF6C63FF),
+                          if (task.status != TaskStatus.completed) ...[
+                            if (task.deliveryTime == null)
+                              GestureDetector(
+                                onTap: () => DeliveryTimeHelper.showDeliveryTimePrompt(context, task.taskCode),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.blue[200]!),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.schedule,
+                                        size: 12,
+                                        color: Colors.blue[600],
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Set Time',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.blue[600],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            if (task.deliveryTime != null)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.schedule,
+                                    size: 12,
+                                    color: Color(0xFF6C63FF),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _randomTimeCost(),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF6C63FF),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
 
                           const SizedBox(width: 12),
                           _buildActionButton(),
