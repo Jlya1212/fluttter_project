@@ -189,6 +189,14 @@ class TaskController extends ChangeNotifier {
     }
   }
 
+  Task? getTaskByCode(String code) {
+    try {
+      return _allTasks.firstWhere((t) => t.taskCode == code);
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<void> updateTaskDeliveryTime(String taskCode, DateTime deliveryTime) async {
     try {
       final result = await repository.updateTaskDeliveryTime(taskCode, deliveryTime);

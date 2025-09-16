@@ -1,37 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/Models/Task.dart';
-import 'package:fluttter_project/View/DeliveryConfirmation_Page.dart';
-import 'package:fluttter_project/ViewModel/TaskController.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:cloud_firestore/cloud_firestore.dart';
+          import 'package:fluttter_project/Models/Task.dart';
+          import 'package:fluttter_project/View/DeliveryConfirmation_Page.dart';
+          import 'package:fluttter_project/ViewModel/TaskController.dart';
+          import 'package:intl/intl.dart';
+          import 'package:provider/provider.dart';
+          import 'dart:convert';
+          import 'dart:typed_data';
+          import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PartRequestDetailsPage extends StatefulWidget {
-  final Task task;
+          class PartRequestDetailsPage extends StatefulWidget {
+          final Task task;
 
-  const PartRequestDetailsPage({Key? key, required this.task}) : super(key: key);
+          const PartRequestDetailsPage({Key? key, required this.task}) : super(key: key);
 
-  @override
-  _PartRequestDetailsPageState createState() => _PartRequestDetailsPageState();
-}
-class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<TaskController>(
-      builder: (context, controller, child) {
-        final task = controller.allTasks.firstWhere(
-              (t) => t.taskCode == widget.task.taskCode,
-          orElse: () => widget.task,
-        );
+          @override
+          _PartRequestDetailsPageState createState() => _PartRequestDetailsPageState();
+          }
+              class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
+              @override
+              Widget build(BuildContext context) {
+              return Consumer<TaskController>(
+              builder: (context, controller, child) {
+                final task = controller.getTaskByCode(widget.task.taskCode);
 
-        return WillPopScope(
-          onWillPop: () async {
-            Navigator.of(context).pop(task.status);
-            return false;
-          },
-          child: Scaffold(
+                if (task == null) {
+                  return Scaffold(
+                    appBar: AppBar(title: const Text("Task not found")),
+                    body: const Center(child: Text("Task not found in controller")),
+                  );
+                }
+
+
+
+                return WillPopScope(
+                  onWillPop: () async {
+                    Navigator.of(context).pop();
+                    return false;
+                  },
+              child: Scaffold(
             backgroundColor: const Color(0xFFF8F9FA),
             appBar: _buildAppBar(context, task),
             body: SingleChildScrollView(
@@ -90,7 +96,7 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
       shadowColor: Colors.grey.withOpacity(0.2),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black87),
-        onPressed: () => Navigator.of(context).pop(task.status),
+        onPressed: () => Navigator.of(context).pop(),
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

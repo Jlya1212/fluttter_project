@@ -135,17 +135,23 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                   itemCount: tasks.length,
                   itemBuilder: (context, index) {
                     final task = tasks[index];
-                    return TaskCard(
-                      task: task,
-                      onTap: () async {
-                        final newStatus = await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PartRequestDetailsPage(task: task),
-                          ),
+                    return Consumer<TaskController>(
+                      builder: (context, controller, _) {
+                        final latestTask = controller.getTaskByCode(task.taskCode) ?? task;
+                        return TaskCard(
+                          task: latestTask,
+                          onTap: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => PartRequestDetailsPage(task: latestTask),
+                              ),
+                            );
+                            controller.loadTasksAndSetFilter(
+                              controller.currentFilter,
+                              _currentUser?.username,
+                            );
+                          },
                         );
-                        if (newStatus != null && newStatus is TaskStatus) {
-                          controller.updateTaskStatus(task.taskCode, newStatus);
-                        }
                       },
                     );
                   },
