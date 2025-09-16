@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
           import 'dart:convert';
           import 'dart:typed_data';
           import 'package:cloud_firestore/cloud_firestore.dart';
+          import '../Common/DeliveryTimeHelper.dart';
 
           class PartRequestDetailsPage extends StatefulWidget {
           final Task task;
@@ -132,11 +133,14 @@ import 'package:flutter/material.dart';
     }
   }
 
-  void _onStatusButtonTapped(BuildContext context, TaskController controller, Task task, TaskStatus newStatus) {
+  void _onStatusButtonTapped(BuildContext context, TaskController controller, Task task, TaskStatus newStatus) async {
     // Prevent any action if the task is already completed
     if (task.status == TaskStatus.completed) return;
 
-    if (newStatus == TaskStatus.completed) {
+    if (task.status == TaskStatus.pickedUp && newStatus == TaskStatus.inProgress) {
+
+      await DeliveryTimeHelper.showDeliveryTimePrompt(context, task.taskCode);
+    } else if (newStatus == TaskStatus.completed) {
       _handleConfirmation(context, controller, task);
     } else {
       controller.updateTaskStatus(task.taskCode, newStatus);
