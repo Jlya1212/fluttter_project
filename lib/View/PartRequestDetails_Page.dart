@@ -1,44 +1,43 @@
 import 'package:flutter/material.dart';
-          import 'package:fluttter_project/Models/Task.dart';
-          import 'package:fluttter_project/View/DeliveryConfirmation_Page.dart';
-          import 'package:fluttter_project/ViewModel/TaskController.dart';
-          import 'package:intl/intl.dart';
-          import 'package:provider/provider.dart';
-          import 'dart:convert';
-          import 'dart:typed_data';
-          import 'package:cloud_firestore/cloud_firestore.dart';
-          import '../Common/DeliveryTimeHelper.dart';
+import 'package:fluttter_project/Models/Task.dart';
+import 'package:fluttter_project/View/DeliveryConfirmation_Page.dart';
+import 'package:fluttter_project/ViewModel/TaskController.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../Common/DeliveryTimeHelper.dart';
 
-          class PartRequestDetailsPage extends StatefulWidget {
-          final Task task;
+class PartRequestDetailsPage extends StatefulWidget {
+  final Task task;
 
-          const PartRequestDetailsPage({Key? key, required this.task}) : super(key: key);
+  const PartRequestDetailsPage({Key? key, required this.task}) : super(key: key);
 
-          @override
-          _PartRequestDetailsPageState createState() => _PartRequestDetailsPageState();
-          }
-              class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
-              @override
-              Widget build(BuildContext context) {
-              return Consumer<TaskController>(
-              builder: (context, controller, child) {
-                final task = controller.getTaskByCode(widget.task.taskCode);
+  @override
+  _PartRequestDetailsPageState createState() => _PartRequestDetailsPageState();
+}
+class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<TaskController>(
+      builder: (context, controller, child) {
+        final task = controller.getTaskByCode(widget.task.taskCode);
 
-                if (task == null) {
-                  return Scaffold(
-                    appBar: AppBar(title: const Text("Task not found")),
-                    body: const Center(child: Text("Task not found in controller")),
-                  );
-                }
+        if (task == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text("Task not found")),
+            body: const Center(child: Text("Task not found in controller")),
+          );
+        }
 
-
-
-                return WillPopScope(
-                  onWillPop: () async {
-                    Navigator.of(context).pop();
-                    return false;
-                  },
-              child: Scaffold(
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (bool didPop) {
+            if (didPop) return;
+            Navigator.of(context).pop();
+          },
+          child: Scaffold(
             backgroundColor: const Color(0xFFF8F9FA),
             appBar: _buildAppBar(context, task),
             body: SingleChildScrollView(
@@ -134,15 +133,27 @@ import 'package:flutter/material.dart';
   }
 
   void _onStatusButtonTapped(BuildContext context, TaskController controller, Task task, TaskStatus newStatus) async {
-    // Prevent any action if the task is already completed
-    if (task.status == TaskStatus.completed) return;
+    // Prevent backward or same-status updates
+    if (newStatus.index <= task.status.index) {
+      if (newStatus.index < task.status.index) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot revert a task to a previous status.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return; // Do nothing
+    }
 
+    // If moving from Picked Up to En Route, show the time prompt
     if (task.status == TaskStatus.pickedUp && newStatus == TaskStatus.inProgress) {
-
       await DeliveryTimeHelper.showDeliveryTimePrompt(context, task.taskCode);
     } else if (newStatus == TaskStatus.completed) {
       _handleConfirmation(context, controller, task);
     } else {
+      // Handle other forward status changes
       controller.updateTaskStatus(task.taskCode, newStatus);
     }
   }
@@ -164,17 +175,17 @@ import 'package:flutter/material.dart';
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _statusButton(context, controller, task, TaskStatus.pending, 'Pending', Icons.pending_actions_outlined, isCompleted: isCompleted)),
+              Expanded(child: _statusButton(context, controller, task, TaskStatus.pending, 'Pending', Icons.pending_actions_outlined)),
               const SizedBox(width: 12),
-              Expanded(child: _statusButton(context, controller, task, TaskStatus.pickedUp, 'Picked Up', Icons.inventory_2_outlined, isCompleted: isCompleted)),
+              Expanded(child: _statusButton(context, controller, task, TaskStatus.pickedUp, 'Picked Up', Icons.inventory_2_outlined)),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _statusButton(context, controller, task, TaskStatus.inProgress, 'En Route', Icons.local_shipping_outlined, isCompleted: isCompleted)),
+              Expanded(child: _statusButton(context, controller, task, TaskStatus.inProgress, 'En Route', Icons.local_shipping_outlined)),
               const SizedBox(width: 12),
-              Expanded(child: _statusButton(context, controller, task, TaskStatus.completed, 'Delivered', Icons.check_circle_outline, isCompleted: isCompleted)),
+              Expanded(child: _statusButton(context, controller, task, TaskStatus.completed, 'Delivered', Icons.check_circle_outline)),
             ],
           ),
         ],
@@ -182,12 +193,9 @@ import 'package:flutter/material.dart';
     );
   }
 
-  Widget _statusButton(BuildContext context, TaskController controller, Task task, TaskStatus status, String label, IconData icon, {required bool isCompleted}) {
+  Widget _statusButton(BuildContext context, TaskController controller, Task task, TaskStatus status, String label, IconData icon) {
     final bool isSelected = task.status == status;
-
-    // Define colors for the completed but not selected state
-    Color completedBackgroundColor = Colors.green.withOpacity(0.08);
-    Color completedContentColor = Colors.green.shade800;
+    final bool isPassed = status.index < task.status.index;
 
     // Determine current state colors
     Color backgroundColor = Colors.grey.shade100;
@@ -195,11 +203,11 @@ import 'package:flutter/material.dart';
     Color borderColor = Colors.grey.shade200;
     FontWeight fontWeight = FontWeight.w500;
 
-    if (isCompleted) {
-      backgroundColor = completedBackgroundColor;
-      contentColor = completedContentColor;
+    if (isPassed || task.status == TaskStatus.completed) {
+      backgroundColor = Colors.green.withOpacity(0.08);
+      contentColor = Colors.green.shade800;
       borderColor = Colors.transparent;
-      if (isSelected) { // The 'Delivered' button when completed
+      if (isSelected) {
         backgroundColor = Colors.orange.withOpacity(0.15);
         contentColor = Colors.orange.shade900;
         borderColor = Colors.orange;
@@ -214,7 +222,7 @@ import 'package:flutter/material.dart';
 
 
     return InkWell(
-      onTap: isCompleted ? null : () => _onStatusButtonTapped(context, controller, task, status),
+      onTap: () => _onStatusButtonTapped(context, controller, task, status),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -225,17 +233,17 @@ import 'package:flutter/material.dart';
         ),
         child: Column(
           children: [
-            if(isCompleted && !isSelected) // Show a solid circle for completed steps
+            if(isPassed || (task.status == TaskStatus.completed && !isSelected))
               Container(
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: completedContentColor,
+                  color: contentColor,
                 ),
                 child: Icon(icon, color: Colors.white, size: 16),
               )
-            else // Default icon display
+            else
               Icon(icon, color: contentColor, size: 28),
 
             const SizedBox(height: 8),
@@ -265,11 +273,9 @@ import 'package:flutter/material.dart';
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
 
-        // Signatures already in Task model
         final mechanicSignature = task.mechanicSignature;
         final deliverySignature = task.deliverySignature;
 
-        // Get photoBase64 from Firestore
         Uint8List? photoBytes;
         if (data['photoBase64'] != null && (data['photoBase64'] as String).isNotEmpty) {
           photoBytes = base64Decode(data['photoBase64']);
@@ -283,7 +289,6 @@ import 'package:flutter/material.dart';
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
 
-              // ✅ Completed status
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -316,7 +321,6 @@ import 'package:flutter/material.dart';
               ),
               const SizedBox(height: 20),
 
-              // Mechanic Signature
               if (mechanicSignature != null) ...[
                 _buildSignatureCard(
                     title: "Mechanic Signature",
@@ -326,7 +330,6 @@ import 'package:flutter/material.dart';
                 const SizedBox(height: 16),
               ],
 
-              // Delivery Signature
               if (deliverySignature != null) ...[
                 _buildSignatureCard(
                     title: "Delivery Signature",
@@ -336,7 +339,6 @@ import 'package:flutter/material.dart';
                 const SizedBox(height: 16),
               ],
 
-              // ✅ Photo from Firestore
               if (photoBytes != null) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -726,3 +728,4 @@ import 'package:flutter/material.dart';
     );
   }
 }
+
