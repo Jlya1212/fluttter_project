@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
+import 'package:fluttter_project/Models/Task.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../Common/FieldHandler.dart';
+import '../ViewModel/TaskController.dart';
 
 class DeliveryTimePromptPage extends StatefulWidget {
   final String taskCode;
-  final Function(DateTime) onDeliveryTimeSelected;
 
   const DeliveryTimePromptPage({
     Key? key,
-    required this.taskCode,
-    required this.onDeliveryTimeSelected,
+    required this.taskCode, required onDeliveryTimeSelected,
   }) : super(key: key);
 
   @override
@@ -136,7 +137,9 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
                   SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _selectedDeliveryTime != null ? _confirmDeliveryTime : null,
+                      onPressed: _selectedDeliveryTime != null
+                          ? () => _confirmDeliveryTime(context)
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[600],
                         foregroundColor: Colors.white,
@@ -157,9 +160,14 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
     );
   }
 
-  void _confirmDeliveryTime() {
+  void _confirmDeliveryTime(BuildContext context) async {
     if (_formKey.currentState!.validate() && _selectedDeliveryTime != null) {
-      widget.onDeliveryTimeSelected(_selectedDeliveryTime!);
+      final controller = context.read<TaskController>();
+
+
+      await controller.updateTaskStatus(widget.taskCode, TaskStatus.inProgress);
+      await controller.updateTaskDeliveryTime(widget.taskCode, _selectedDeliveryTime!);
+
       Navigator.of(context).pop();
     }
   }

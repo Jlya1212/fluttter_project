@@ -71,18 +71,18 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
             actions: [
               // This code adds a sort popup to choose sort order by start time.
               PopupMenuButton<TaskSort>(
-                tooltip: 'Sort by start time',
+                tooltip: 'Sort by End time',
                 icon: const Icon(Icons.sort, color: Colors.black),
                 initialValue: controller.sort,
                 onSelected: controller.setSort,
                 itemBuilder: (context) => const [
                   PopupMenuItem(
                     value: TaskSort.startTimeAsc,
-                    child: Text('Start time ↑ (earliest first)'),
+                    child: Text('End time ↑ (earliest first)'),
                   ),
                   PopupMenuItem(
                     value: TaskSort.startTimeDesc,
-                    child: Text('Start time ↓ (latest first)'),
+                    child: Text('End time ↓ (latest first)'),
                   ),
                 ],
               ),
@@ -94,16 +94,21 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
           ),
           body: Column(
             children: [
-              // TabRow
+              // Scrollable TabRow
               Container(
                 color: Colors.white,
-                child: Row(
-                  children: [
-                    _buildTab('All Orders', TaskStatus.all),
-                    _buildTab('Pending', TaskStatus.pending),
-                    _buildTab('In Progress', TaskStatus.inProgress),
-                    _buildTab('Completed', TaskStatus.completed),
-                  ],
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    children: [
+                      _buildTab('All Orders', TaskStatus.all),
+                      _buildTab('Pending', TaskStatus.pending),
+                      _buildTab('Picked Up', TaskStatus.pickedUp),
+                      _buildTab('In Progress', TaskStatus.inProgress),
+                      _buildTab('Completed', TaskStatus.completed),
+                    ],
+                  ),
                 ),
               ),
               // This code shows current sort hint under tabs.
@@ -161,53 +166,52 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         ? controller.allTasks.length
         : controller.allTasks.where((t) => t.status == status).length;
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          // Use the controller from initState to call methods
-          _controller.setFilter(status);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isSelected ? Colors.orange : Colors.transparent,
-                width: 2,
-              ),
+    return GestureDetector(
+      onTap: () {
+        // Use the controller from initState to call methods
+        _controller.setFilter(status);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? Colors.orange : Colors.transparent,
+              width: 2,
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.orange : Colors.grey,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.orange : Colors.grey,
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.orange.shade700 : Colors.grey.shade400,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  count.toString(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              if (count > 0) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange.shade700 : Colors.grey.shade400,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    count.toString(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
             ],
-          ),
+          ],
         ),
       ),
     );

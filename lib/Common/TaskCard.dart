@@ -87,7 +87,7 @@ class TaskCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (task.deliveryTime != null) ...[
+                      if (task.status == TaskStatus.inProgress && task.deliveryTime != null) ...[
                         const SizedBox(height: 4),
                         Row(
                           children: [
@@ -103,6 +103,27 @@ class TaskCard extends StatelessWidget {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.blue[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (task.deadline != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule_outlined,
+                              size: 14,
+                              color: Colors.red[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Deadline: ${_formatDate(task.deadline!)} ${_formatTime(task.deadline!)}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.red[600],
                               ),
                             ),
                           ],
@@ -139,61 +160,40 @@ class TaskCard extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
-                          if (task.status != TaskStatus.completed) ...[
-                            if (task.deliveryTime == null)
-                              GestureDetector(
-                                onTap: () => DeliveryTimeHelper.showDeliveryTimePrompt(context, task.taskCode),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.blue[200]!),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.schedule,
-                                        size: 12,
+                          // Only show "Set Time" button for pickedUp status
+                          if (task.status == TaskStatus.pickedUp) ...[
+                            GestureDetector(
+                              onTap: () => DeliveryTimeHelper.showDeliveryTimePrompt(context, task.taskCode),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.blue[200]!),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.schedule,
+                                      size: 12,
+                                      color: Colors.blue[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Set Time',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
                                         color: Colors.blue[600],
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Set Time',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.blue[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            if (task.deliveryTime != null)
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.schedule,
-                                    size: 12,
-                                    color: Color(0xFF6C63FF),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _randomTimeCost(),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF6C63FF),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            ),
+                            const SizedBox(width: 12),
                           ],
-
-                          const SizedBox(width: 12),
                           _buildActionButton(),
                         ],
                       ),
@@ -364,10 +364,5 @@ class TaskCard extends StatelessWidget {
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $period';
-  }
-
-  String _randomTimeCost() {
-    final random = DateTime.now().millisecondsSinceEpoch % 60;
-    return '${random + 15} min';
   }
 }
