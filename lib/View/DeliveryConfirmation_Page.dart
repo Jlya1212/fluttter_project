@@ -604,7 +604,11 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
     Color color = Colors.grey.shade300;
     Color iconColor = Colors.grey.shade600;
     String buttonText = 'Sign';
-    if(stepNumber == 4) buttonText = 'Finalize';
+    if (stepNumber == 3) {
+      buttonText = 'Capture';
+    } else if (stepNumber == 4) {
+      buttonText = 'Finalize';
+    }
 
 
     if (isEnabled && !isCompleted) {
