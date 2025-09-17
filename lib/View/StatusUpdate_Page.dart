@@ -471,52 +471,54 @@ class _StatusUpdateState extends State<StatusUpdate> {
         ? controller.allTasks.length
         : controller.allTasks.where((t) => t.status == status).length;
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          controller.setFilter(status);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isSelected ? Colors.orange : Colors.transparent,
-                width: 2,
-              ),
+    return GestureDetector
+      (
+      onTap: () {
+        controller.setFilter(status);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? Colors.orange : Colors.transparent,
+              width: 2,
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.orange : Colors.grey,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.orange : Colors.grey,
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.orange.shade700 : Colors.grey.shade400,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  count.toString(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              if (count > 0) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange.shade700 : Colors.grey.shade400,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    count.toString(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -551,17 +553,21 @@ class _StatusUpdateState extends State<StatusUpdate> {
               children: [
                 const Text(
                   'Status Updates',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.black,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const Text(
                   'Update delivery progress',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.grey,
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.normal,
                   ),
                 ),
@@ -644,28 +650,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                   ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Live Updates',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '${tasks.length} deliveries',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
+              const SizedBox.shrink(),
             ],
           ),
           body: _showChecklistView
@@ -675,14 +660,17 @@ class _StatusUpdateState extends State<StatusUpdate> {
               // Status Filter Tabs (TaskSchedule_Page style)
               Container(
                 color: Colors.white,
-                child: Row(
-                  children: [
-                    _buildStatusTab('All Orders', TaskStatus.all, taskController),
-                    _buildStatusTab('Pending', TaskStatus.pending, taskController),
-                    _buildStatusTab('Picked Up', TaskStatus.pickedUp, taskController),
-                    _buildStatusTab('En Route', TaskStatus.inProgress, taskController),
-                    _buildStatusTab('Completed', TaskStatus.completed, taskController),
-                  ],
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildStatusTab('All Orders', TaskStatus.all, taskController),
+                      _buildStatusTab('Pending', TaskStatus.pending, taskController),
+                      _buildStatusTab('Picked Up', TaskStatus.pickedUp, taskController),
+                      _buildStatusTab('En Route', TaskStatus.inProgress, taskController),
+                      _buildStatusTab('Completed', TaskStatus.completed, taskController),
+                    ],
+                  ),
                 ),
               ),
 
@@ -826,10 +814,15 @@ class _StatusUpdateState extends State<StatusUpdate> {
                             // Status Buttons
                             Row(
                               children: statusOptions.map((status) {
-                                bool isSelected = task.status == _getStatusFromDisplayName(status);
-                                IconData icon = _getStatusIcon(_getStatusFromDisplayName(status));
                                 final TaskStatus optionStatus = _getStatusFromDisplayName(status);
+                                final bool isSelected = task.status == optionStatus;
+                                final IconData icon = _getStatusIcon(optionStatus);
                                 final bool isDisabled = optionStatus.index < task.status.index; // prevent going backwards
+
+                                // Dynamic accent color: completed -> green, others -> orange
+                                final Color accentColor = optionStatus == TaskStatus.completed
+                                    ? Colors.green
+                                    : Colors.orange;
 
                                 return Expanded(
                                   child: Padding(
@@ -847,7 +840,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                               : (isSelected ? Colors.white : Colors.grey.shade100),
                                           borderRadius: BorderRadius.circular(8),
                                           border: Border.all(
-                                            color: isDisabled ? Colors.grey.shade300 : (isSelected ? Colors.orange : Colors.grey.shade300),
+                                            color: isDisabled ? Colors.grey.shade300 : (isSelected ? accentColor : Colors.grey.shade300),
                                             width: isSelected ? 2 : 1,
                                           ),
                                         ),
@@ -855,7 +848,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                           children: [
                                             Icon(
                                               icon,
-                                              color: isDisabled ? Colors.grey.shade400 : (isSelected ? Colors.orange : Colors.grey.shade600),
+                                              color: isDisabled ? Colors.grey.shade400 : (isSelected ? accentColor : Colors.grey.shade600),
                                               size: 20,
                                             ),
                                             const SizedBox(height: 4),
@@ -863,7 +856,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                               status,
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: isDisabled ? Colors.grey.shade500 : (isSelected ? Colors.orange : Colors.grey.shade600),
+                                                color: isDisabled ? Colors.grey.shade500 : (isSelected ? accentColor : Colors.grey.shade600),
                                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                               ),
                                               textAlign: TextAlign.center,
