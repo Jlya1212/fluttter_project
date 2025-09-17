@@ -97,12 +97,49 @@ class TaskCard extends StatelessWidget {
                               color: Colors.blue[600],
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              'Delivery: ${_formatDate(task.deliveryTime!)} ${_formatTime(task.deliveryTime!)}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.blue[600],
+                            Expanded(
+                              child: Text(
+                                'Delivery: ${_formatDate(task.deliveryTime!)} ${_formatTime(task.deliveryTime!)}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.blue[600],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => DeliveryTimeHelper.showDeliveryTimePrompt(
+                                context,
+                                task.taskCode,
+                                isEditMode: true,
+                                initialDeliveryTime: task.deliveryTime,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue[200]!),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.edit,
+                                      size: 10,
+                                      color: Colors.blue[600],
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      'Edit',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],

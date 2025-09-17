@@ -8,10 +8,14 @@ import '../ViewModel/TaskController.dart';
 
 class DeliveryTimePromptPage extends StatefulWidget {
   final String taskCode;
+  final void Function(DateTime deliveryTime)? onDeliveryTimeSelected;
+  final DateTime? initialDeliveryTime; // 用于编辑模式
 
   const DeliveryTimePromptPage({
     Key? key,
-    required this.taskCode, required onDeliveryTimeSelected,
+    required this.taskCode,
+    this.onDeliveryTimeSelected,
+    this.initialDeliveryTime,
   }) : super(key: key);
 
   @override
@@ -20,11 +24,20 @@ class DeliveryTimePromptPage extends StatefulWidget {
 
 class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
   final _formKey = GlobalKey<FormState>();
-  DateTime? _selectedDeliveryTime;
+  late DateTime? _selectedDeliveryTime;
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd HH:mm');
 
   @override
+  void initState() {
+    super.initState();
+    _selectedDeliveryTime = widget.initialDeliveryTime;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final taskController = context.watch<TaskController>();
+    final Task? task = taskController.getTaskByCode(widget.taskCode);
+    final DateTime? requiredDeadline = task?.deadline;
     return Scaffold(
       appBar: AppBar(
         title: Text('Select Delivery Time'),
@@ -74,9 +87,26 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
                   color: Colors.grey[800],
                 ),
               ),
+              if (requiredDeadline != null) ...[
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: Colors.orange[700]),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Delivery time must not be later than the required deadline: ${_dateFormat.format(requiredDeadline)}',
+                        style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               SizedBox(height: 12),
               DateTimeField(
                 format: _dateFormat,
+                initialValue: _selectedDeliveryTime,
                 decoration: InputDecoration(
                   labelText: 'Select Date & Time',
                   hintText: 'Choose delivery date and time',
@@ -86,19 +116,35 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
                   prefixIcon: Icon(Icons.schedule, color: Colors.blue[600]),
                   filled: true,
                   fillColor: Colors.grey[50],
+                  helperText: requiredDeadline != null
+                      ? 'Cannot be later than: ${_dateFormat.format(requiredDeadline)}'
+                      : null,
                 ),
                 onShowPicker: (context, currentValue) async {
+                  final DateTime now = DateTime.now();
+                  final DateTime oneYear = now.add(Duration(days: 365));
+                  final DateTime cap = (requiredDeadline != null && requiredDeadline.isBefore(oneYear))
+                      ? requiredDeadline
+                      : oneYear;
+                  // Ensure lastDate is never before firstDate to avoid a disabled picker
+                  final DateTime lastPickableDate = cap.isBefore(now) ? now : cap;
+
+                  DateTime initial = currentValue ??
+                      (widget.initialDeliveryTime ?? now.add(Duration(hours: 1)));
+                  if (initial.isBefore(now)) initial = now;
+                  if (initial.isAfter(lastPickableDate)) initial = lastPickableDate;
+
                   final date = await showDatePicker(
                     context: context,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(Duration(days: 365)),
-                    initialDate: currentValue ?? DateTime.now().add(Duration(hours: 1)),
+                    firstDate: now,
+                    lastDate: lastPickableDate,
+                    initialDate: initial,
                   );
                   if (date != null) {
                     final time = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay.fromDateTime(
-                        currentValue ?? DateTime.now().add(Duration(hours: 1)),
+                        initial,
                       ),
                     );
                     return DateTimeField.combine(date, time);
@@ -112,7 +158,10 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
                   });
                 },
                 validator: (DateTime? value) {
-                  return FieldHandler.validateDeliveryTime(value);
+                  return FieldHandler.validateDeliveryTime(
+                    value,
+                    requiredDeadline: requiredDeadline,
+                  );
                 },
               ),
               SizedBox(height: 24),

@@ -20,6 +20,7 @@ class AppRouter {
           builder: (_) => DeliveryTimePromptPage(
             taskCode: args['taskCode'],
             onDeliveryTimeSelected: args['onDeliveryTimeSelected'],
+            initialDeliveryTime: args['initialDeliveryTime'],
           ),
         );
 

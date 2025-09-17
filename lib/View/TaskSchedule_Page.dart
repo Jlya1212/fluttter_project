@@ -70,20 +70,28 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
               ),
             ),
             actions: [
-              // This code adds a sort popup to choose sort order by start time.
+              // This code adds a sort popup to choose sort order by start time or deadline.
               PopupMenuButton<TaskSort>(
-                tooltip: 'Sort by End time',
+                tooltip: 'Sort by time',
                 icon: const Icon(Icons.sort, color: Colors.black),
                 initialValue: controller.sort,
                 onSelected: controller.setSort,
                 itemBuilder: (context) => const [
                   PopupMenuItem(
                     value: TaskSort.startTimeAsc,
-                    child: Text('End time ↑ (earliest first)'),
+                    child: Text('Start time ↑ (earliest first)'),
                   ),
                   PopupMenuItem(
                     value: TaskSort.startTimeDesc,
-                    child: Text('End time ↓ (latest first)'),
+                    child: Text('Start time ↓ (latest first)'),
+                  ),
+                  PopupMenuItem(
+                    value: TaskSort.deadlineAsc,
+                    child: Text('Deadline ↑ (closest first)'),
+                  ),
+                  PopupMenuItem(
+                    value: TaskSort.deadlineDesc,
+                    child: Text('Deadline ↓ (furthest first)'),
                   ),
                 ],
               ),
@@ -120,9 +128,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                     const Icon(Icons.info_outline, size: 14, color: Colors.grey),
                     const SizedBox(width: 6),
                     Text(
-                      controller.sort == TaskSort.startTimeAsc
-                          ? 'Sorted by Start Time: Earliest first'
-                          : 'Sorted by Start Time: Latest first',
+                      _getSortDescription(controller.sort),
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
@@ -163,6 +169,19 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
         );
       },
     );
+  }
+
+  String _getSortDescription(TaskSort sort) {
+    switch (sort) {
+      case TaskSort.startTimeAsc:
+        return 'Sorted by Start Time: Earliest first';
+      case TaskSort.startTimeDesc:
+        return 'Sorted by Start Time: Latest first';
+      case TaskSort.deadlineAsc:
+        return 'Sorted by Deadline: Closest first';
+      case TaskSort.deadlineDesc:
+        return 'Sorted by Deadline: Furthest first';
+    }
   }
 
   Widget _buildTab(String title, TaskStatus status) {

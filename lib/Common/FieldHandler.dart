@@ -1,5 +1,5 @@
 class FieldHandler {
-  static String? validateDeliveryTime(DateTime? deliveryTime) {
+  static String? validateDeliveryTime(DateTime? deliveryTime, {DateTime? requiredDeadline}) {
     if (deliveryTime == null) {
       return 'Delivery time is required';
     }
@@ -15,10 +15,15 @@ class FieldHandler {
       return 'Delivery time cannot be more than 1 year in the future';
     }
 
+    // Additional optional check: must be on/before the required deadline
+    if (requiredDeadline != null && deliveryTime.isAfter(requiredDeadline)) {
+      return 'Delivery time cannot be later than the required deadline';
+    }
+
     return null; // Valid
   }
 
-  static bool isValidDeliveryTime(DateTime? deliveryTime) {
-    return validateDeliveryTime(deliveryTime) == null;
+  static bool isValidDeliveryTime(DateTime? deliveryTime, {DateTime? requiredDeadline}) {
+    return validateDeliveryTime(deliveryTime, requiredDeadline: requiredDeadline) == null;
   }
 }

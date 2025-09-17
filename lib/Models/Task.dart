@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
 
 enum TaskStatus { pending, pickedUp, inProgress, completed, all }
-enum TaskSort { startTimeAsc, startTimeDesc }
+enum TaskSort { startTimeAsc, startTimeDesc, deadlineAsc, deadlineDesc }
 
 class Task {
   final String taskName;

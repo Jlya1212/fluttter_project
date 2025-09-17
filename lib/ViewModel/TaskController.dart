@@ -22,10 +22,15 @@ class TaskController extends ChangeNotifier {
     }
 
     tasks.sort((a, b) {
-      if (_sort == TaskSort.startTimeAsc) {
-        return a.startTime.compareTo(b.startTime);
-      } else {
-        return b.startTime.compareTo(a.startTime);
+      switch (_sort) {
+        case TaskSort.startTimeAsc:
+          return a.startTime.compareTo(b.startTime);
+        case TaskSort.startTimeDesc:
+          return b.startTime.compareTo(a.startTime);
+        case TaskSort.deadlineAsc:
+          return a.deadline.compareTo(b.deadline);
+        case TaskSort.deadlineDesc:
+          return b.deadline.compareTo(a.deadline);
       }
     });
 
