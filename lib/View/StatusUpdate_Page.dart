@@ -7,6 +7,7 @@ import '../ViewModel/TaskController.dart';
 import '../Models/Task.dart';
 import '../ViewModel/UserController.dart';
 import 'PartRequestDetails_Page.dart';
+import 'DeliveryConfirmation_Page.dart';
 import '../Common/DeliveryTimeHelper.dart';
 
 class StatusUpdate extends StatefulWidget {
@@ -856,15 +857,31 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                     child: GestureDetector(
                                       onTap: isDisabled ? null : () async {
                                         final newStatus = _getStatusFromDisplayName(status);
-                                        if (task.status == TaskStatus.pickedUp && newStatus == TaskStatus.inProgress) {
-                                          // When moving to En Route, request delivery time (set/edit)
+                                        if (newStatus == TaskStatus.inProgress) {
+                                          // Always prompt to select delivery time when setting to En Route
                                           await DeliveryTimeHelper.showDeliveryTimePrompt(
                                             context,
                                             task.taskCode,
                                             isEditMode: task.deliveryTime != null,
                                             initialDeliveryTime: task.deliveryTime,
                                           );
-                                          await taskController.updateTaskStatus(task.taskCode, newStatus);
+                                          // DeliveryTimePromptPage itself handles status update to inProgress
+                                        } else if (newStatus == TaskStatus.completed) {
+                                          final result = await Navigator.of(context).push<Map<String, dynamic>>(
+                                            MaterialPageRoute(
+                                              builder: (context) => DeliveryConfirmationPage(task: task),
+                                            ),
+                                          );
+
+                                          if (result != null) {
+                                            await taskController.confirmDelivery(
+                                              task.taskCode,
+                                              result['mechanicSignature'],
+                                              result['deliverySignature'],
+                                              result['photoFile'],
+                                              result['completionTime'],
+                                            );
+                                          }
                                         } else {
                                           await taskController.updateTaskStatus(task.taskCode, newStatus);
                                         }
