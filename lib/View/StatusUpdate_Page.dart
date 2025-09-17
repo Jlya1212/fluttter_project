@@ -8,6 +8,7 @@ import '../Models/Task.dart';
 import '../ViewModel/UserController.dart';
 import 'PartRequestDetails_Page.dart';
 import 'DeliveryConfirmation_Page.dart';
+import 'VirtualDriverNavigationPage.dart';
 import '../Common/DeliveryTimeHelper.dart';
 
 class StatusUpdate extends StatefulWidget {
@@ -926,43 +927,89 @@ class _StatusUpdateState extends State<StatusUpdate> {
 
                             const SizedBox(height: 16),
 
-                            // View Full Details Button
-                            GestureDetector(
-                              onTap: () {
-                                // Navigate to PartRequestDetails page
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PartRequestDetailsPage(task: task),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.visibility,
-                                      color: Colors.grey.shade600,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'View Full Details',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
+                            // Navigation and Details Buttons
+                            Row(
+                              children: [
+                                if (task.status == TaskStatus.inProgress) ...[
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Navigate to Virtual Driver Navigation
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => VirtualDriverNavigationPage(task: task),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade600,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.navigation,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Start Navigation',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // Navigate to PartRequestDetails page
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PartRequestDetailsPage(task: task),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.visibility,
+                                            color: Colors.grey.shade600,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'View Full Details',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),

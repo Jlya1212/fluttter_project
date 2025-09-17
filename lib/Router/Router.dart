@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttter_project/View/Login_Page.dart';
 import 'package:fluttter_project/Common/MainTabController.dart';
 import 'package:fluttter_project/View/DeliveryTimePromptPage.dart';
+import 'package:fluttter_project/View/VirtualDriverNavigationPage.dart';
+import 'package:fluttter_project/Models/Task.dart';
 
 import '../View/DeliveryTimePromptPage.dart';
 
@@ -22,6 +24,12 @@ class AppRouter {
             onDeliveryTimeSelected: args['onDeliveryTimeSelected'],
             initialDeliveryTime: args['initialDeliveryTime'],
           ),
+        );
+
+      case '/virtual-driver-navigation':
+        final task = settings.arguments as Task;
+        return MaterialPageRoute(
+          builder: (_) => VirtualDriverNavigationPage(task: task),
         );
 
       default:

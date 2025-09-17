@@ -9,6 +9,7 @@ import '../Common/DeliveryTimeHelper.dart';
 import '../Models/Task.dart';
 import '../ViewModel/TaskController.dart';
 import 'DeliveryConfirmation_Page.dart';
+import 'VirtualDriverNavigationPage.dart';
 
 class PartRequestDetailsPage extends StatefulWidget {
   final Task task;
@@ -64,6 +65,37 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
                   const SizedBox(height: 20),
                   _buildSpecialInstructionsSection(task),
                   const SizedBox(height: 24),
+
+                  // Navigation and Confirmation Buttons
+                  if (task.status == TaskStatus.inProgress) ...[
+                    // Start Navigation Button for En Route tasks
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VirtualDriverNavigationPage(task: task),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.navigation, color: Colors.white),
+                        label: const Text(
+                          'Start Navigation',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
                   if (task.status == TaskStatus.pickedUp || task.status == TaskStatus.inProgress)
                     ElevatedButton.icon(
