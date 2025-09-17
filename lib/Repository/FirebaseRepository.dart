@@ -144,6 +144,7 @@ class FirebaseRepository implements Repository {
         'photoBase64': photoBase64,
         'completionTime': Timestamp.fromDate(completionTime),
         'status': TaskStatus.completed.name,
+        'lastUpdated': Timestamp.fromDate(DateTime.now()),
       });
 
 

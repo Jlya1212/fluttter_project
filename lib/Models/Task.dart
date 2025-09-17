@@ -19,6 +19,7 @@ class Task {
   final String ownerId;
   final String? photoBase64;
   final DateTime? completionTime;
+  final DateTime? lastUpdated;
   final String? customerName;
   final String? partDetails;
   final String? destinationAddress;
@@ -43,6 +44,7 @@ class Task {
     this.mechanicSignature,
     this.deliverySignature,
     this.completionTime,
+    this.lastUpdated,
     this.customerName,
     this.partDetails,
     this.destinationAddress,
@@ -104,6 +106,10 @@ class Task {
           ? (json['completionTime'] as Timestamp).toDate()
           : null,
 
+      lastUpdated: json['lastUpdated'] != null
+          ? (json['lastUpdated'] as Timestamp).toDate()
+          : null,
+
       assignDriverName: json['assignDriverName'] as String?,
       deliveryTime: json['deliveryTime'] != null
           ? (json['deliveryTime'] as Timestamp).toDate()
@@ -130,6 +136,7 @@ class Task {
       'deliverySignature':
       deliverySignature != null ? Blob(deliverySignature!) : null,
       'completionTime': completionTime != null ? Timestamp.fromDate(completionTime!) : null,
+      'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
       'customerName': customerName,
       'partDetails': partDetails,
       'destinationAddress': destinationAddress,
