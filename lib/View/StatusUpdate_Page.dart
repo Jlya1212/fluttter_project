@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../Models/User.dart';
@@ -19,14 +20,20 @@ class _StatusUpdateState extends State<StatusUpdate> {
   bool _showChecklistView = false; // Toggle between checklist and detailed view (default to detailed)
   late final UserController _userController;
   late User _currentUser;
+  Timer? _minuteTicker;
 
-  final List<String> statusOptions = ['Pending', 'Picked Up', 'In Progress', 'Completed'];
+  final List<String> statusOptions = ['Pending', 'Picked Up', 'En Route', 'Completed'];
 
   @override
   void initState() {
     super.initState();
     _userController = Provider.of<UserController>(context, listen: false);
     _initCurrentUserAndTasks();
+
+    // Rebuild every minute to refresh "Updated X mins ago"
+    _minuteTicker = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   Future<void> _initCurrentUserAndTasks() async {
@@ -42,6 +49,12 @@ class _StatusUpdateState extends State<StatusUpdate> {
     }
     // 2. Load tasks for this user
     await _loadTasks();
+  }
+
+  @override
+  void dispose() {
+    _minuteTicker?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadTasks() async {
@@ -61,7 +74,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
       case TaskStatus.pickedUp:
         return 'Picked Up';
       case TaskStatus.inProgress:
-        return 'In Progress';
+        return 'En Route';
       case TaskStatus.completed:
         return 'Completed';
       case TaskStatus.all:
@@ -76,7 +89,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
         return TaskStatus.pending;
       case 'Picked Up':
         return TaskStatus.pickedUp;
-      case 'In Progress':
+      case 'En Route':
         return TaskStatus.inProgress;
       case 'Completed':
         return TaskStatus.completed;
@@ -667,7 +680,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                     _buildStatusTab('All Orders', TaskStatus.all, taskController),
                     _buildStatusTab('Pending', TaskStatus.pending, taskController),
                     _buildStatusTab('Picked Up', TaskStatus.pickedUp, taskController),
-                    _buildStatusTab('In Progress', TaskStatus.inProgress, taskController),
+                    _buildStatusTab('En Route', TaskStatus.inProgress, taskController),
                     _buildStatusTab('Completed', TaskStatus.completed, taskController),
                   ],
                 ),
@@ -786,7 +799,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                       ),
                                     ),
                                     Text(
-                                      _getTimeAgo(task.startTime),
+                                      _getTimeAgo((task.lastUpdated ?? task.startTime)),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade500,
@@ -815,22 +828,26 @@ class _StatusUpdateState extends State<StatusUpdate> {
                               children: statusOptions.map((status) {
                                 bool isSelected = task.status == _getStatusFromDisplayName(status);
                                 IconData icon = _getStatusIcon(_getStatusFromDisplayName(status));
+                                final TaskStatus optionStatus = _getStatusFromDisplayName(status);
+                                final bool isDisabled = optionStatus.index < task.status.index; // prevent going backwards
 
                                 return Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.only(right: 8),
                                     child: GestureDetector(
-                                      onTap: () async {
+                                      onTap: isDisabled ? null : () async {
                                         final newStatus = _getStatusFromDisplayName(status);
                                         await taskController.updateTaskStatus(task.taskCode, newStatus);
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(vertical: 8),
                                         decoration: BoxDecoration(
-                                          color: isSelected ? Colors.white : Colors.grey.shade100,
+                                          color: isDisabled
+                                              ? Colors.grey.shade200
+                                              : (isSelected ? Colors.white : Colors.grey.shade100),
                                           borderRadius: BorderRadius.circular(8),
                                           border: Border.all(
-                                            color: isSelected ? Colors.orange : Colors.grey.shade300,
+                                            color: isDisabled ? Colors.grey.shade300 : (isSelected ? Colors.orange : Colors.grey.shade300),
                                             width: isSelected ? 2 : 1,
                                           ),
                                         ),
@@ -838,7 +855,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                           children: [
                                             Icon(
                                               icon,
-                                              color: isSelected ? Colors.orange : Colors.grey.shade600,
+                                              color: isDisabled ? Colors.grey.shade400 : (isSelected ? Colors.orange : Colors.grey.shade600),
                                               size: 20,
                                             ),
                                             const SizedBox(height: 4),
@@ -846,7 +863,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                               status,
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: isSelected ? Colors.orange : Colors.grey.shade600,
+                                                color: isDisabled ? Colors.grey.shade500 : (isSelected ? Colors.orange : Colors.grey.shade600),
                                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                               ),
                                               textAlign: TextAlign.center,
