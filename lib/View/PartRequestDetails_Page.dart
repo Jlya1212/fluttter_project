@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/Models/Task.dart';
-import 'package:fluttter_project/View/DeliveryConfirmation_Page.dart';
-import 'package:fluttter_project/ViewModel/TaskController.dart';
+
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Common/DeliveryTimeHelper.dart';
+import '../Models/Task.dart';
+import '../ViewModel/TaskController.dart';
+import 'DeliveryConfirmation_Page.dart';
 
 class PartRequestDetailsPage extends StatefulWidget {
   final Task task;

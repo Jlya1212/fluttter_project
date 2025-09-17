@@ -1,11 +1,11 @@
 // lib/View/Home_Page.dart
 
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/ViewModel/TaskController.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:fluttter_project/ViewModel/UserController.dart';
 import '../Models/Task.dart';
+import '../ViewModel/TaskController.dart';
+import '../ViewModel/UserController.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
