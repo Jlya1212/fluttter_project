@@ -7,6 +7,7 @@ import '../ViewModel/TaskController.dart';
 import '../Models/Task.dart';
 import '../ViewModel/UserController.dart';
 import 'PartRequestDetails_Page.dart';
+import '../Common/DeliveryTimeHelper.dart';
 
 class StatusUpdate extends StatefulWidget {
   const StatusUpdate({Key? key}) : super(key: key);
@@ -574,6 +575,31 @@ class _StatusUpdateState extends State<StatusUpdate> {
               ],
             ),
             actions: [
+              // Sort popup (same options as schedule page)
+              PopupMenuButton<TaskSort>(
+                tooltip: 'Sort by time',
+                icon: const Icon(Icons.sort, color: Colors.black),
+                initialValue: taskController.sort,
+                onSelected: taskController.setSort,
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: TaskSort.startTimeAsc,
+                    child: Text('Start time ↑ (earliest first)'),
+                  ),
+                  PopupMenuItem(
+                    value: TaskSort.startTimeDesc,
+                    child: Text('Start time ↓ (latest first)'),
+                  ),
+                  PopupMenuItem(
+                    value: TaskSort.deadlineAsc,
+                    child: Text('Deadline ↑ (closest first)'),
+                  ),
+                  PopupMenuItem(
+                    value: TaskSort.deadlineDesc,
+                    child: Text('Deadline ↓ (furthest first)'),
+                  ),
+                ],
+              ),
               // Toggle button for checklist/detailed view
               Container(
                 margin: const EdgeInsets.only(right: 8),
@@ -811,7 +837,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                             ),
                             const SizedBox(height: 12),
 
-                            // Status Buttons
+                            // Status Buttons + Set Time when transitioning to En Route
                             Row(
                               children: statusOptions.map((status) {
                                 final TaskStatus optionStatus = _getStatusFromDisplayName(status);
@@ -830,7 +856,18 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                     child: GestureDetector(
                                       onTap: isDisabled ? null : () async {
                                         final newStatus = _getStatusFromDisplayName(status);
-                                        await taskController.updateTaskStatus(task.taskCode, newStatus);
+                                        if (task.status == TaskStatus.pickedUp && newStatus == TaskStatus.inProgress) {
+                                          // When moving to En Route, request delivery time (set/edit)
+                                          await DeliveryTimeHelper.showDeliveryTimePrompt(
+                                            context,
+                                            task.taskCode,
+                                            isEditMode: task.deliveryTime != null,
+                                            initialDeliveryTime: task.deliveryTime,
+                                          );
+                                          await taskController.updateTaskStatus(task.taskCode, newStatus);
+                                        } else {
+                                          await taskController.updateTaskStatus(task.taskCode, newStatus);
+                                        }
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(vertical: 8),

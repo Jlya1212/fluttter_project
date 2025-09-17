@@ -114,7 +114,7 @@ class _DeliverySchedulePageState extends State<DeliverySchedulePage> {
                       _buildTab('All Orders', TaskStatus.all),
                       _buildTab('Pending', TaskStatus.pending),
                       _buildTab('Picked Up', TaskStatus.pickedUp),
-                      _buildTab('In Progress', TaskStatus.inProgress),
+                      _buildTab('En Route', TaskStatus.inProgress),
                       _buildTab('Completed', TaskStatus.completed),
                     ],
                   ),
