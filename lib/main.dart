@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:fluttter_project/Repository/FirebaseRepository.dart';
-import 'package:fluttter_project/ViewModel/TaskController.dart';
-import 'package:fluttter_project/ViewModel/UserController.dart';
+
 import 'package:provider/provider.dart';
 import 'Models/Task.dart';
+import 'Repository/FirebaseRepository.dart';
 import 'Router/Router.dart';
 
 // Import Firebase Core and the generated options file
 import 'package:firebase_core/firebase_core.dart';
+import 'ViewModel/TaskController.dart';
+import 'ViewModel/UserController.dart';
 import 'firebase_options.dart';
 
 void main() async {
