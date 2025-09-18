@@ -211,13 +211,7 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
 
   void _confirmDeliveryTime(BuildContext context) async {
     if (_formKey.currentState!.validate() && _selectedDeliveryTime != null) {
-      final controller = context.read<TaskController>();
-
-
-      await controller.updateTaskStatus(widget.taskCode, TaskStatus.inProgress);
-      await controller.updateTaskDeliveryTime(widget.taskCode, _selectedDeliveryTime!);
-
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(_selectedDeliveryTime);  // 只返回结果
     }
   }
 }

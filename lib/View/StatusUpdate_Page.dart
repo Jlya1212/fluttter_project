@@ -6,6 +6,7 @@ import '../Models/User.dart';
 import '../ViewModel/TaskController.dart';
 import '../Models/Task.dart';
 import '../ViewModel/UserController.dart';
+import 'DeliveryTimePromptPage.dart';
 import 'PartRequestDetails_Page.dart';
 import 'DeliveryConfirmation_Page.dart';
 import 'VirtualDriverNavigationPage.dart';
@@ -859,15 +860,22 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                       onTap: isDisabled ? null : () async {
                                         final newStatus = _getStatusFromDisplayName(status);
                                         if (newStatus == TaskStatus.inProgress) {
-                                          // Always prompt to select delivery time when setting to En Route
-                                          await DeliveryTimeHelper.showDeliveryTimePrompt(
+                                          final selectedTime = await Navigator.push<DateTime>(
                                             context,
-                                            task.taskCode,
-                                            isEditMode: task.deliveryTime != null,
-                                            initialDeliveryTime: task.deliveryTime,
+                                            MaterialPageRoute(
+                                              builder: (context) => DeliveryTimePromptPage(
+                                                taskCode: task.taskCode,
+                                                initialDeliveryTime: task.deliveryTime,
+                                              ),
+                                            ),
                                           );
-                                          // DeliveryTimePromptPage itself handles status update to inProgress
-                                        } else if (newStatus == TaskStatus.completed) {
+
+                                          if (selectedTime != null) {
+                                            await taskController.updateTaskStatus(task.taskCode, TaskStatus.inProgress);
+                                            await taskController.updateTaskDeliveryTime(task.taskCode, selectedTime);
+                                          }
+                                        }
+                                        else if (newStatus == TaskStatus.completed) {
                                           final result = await Navigator.of(context).push<Map<String, dynamic>>(
                                             MaterialPageRoute(
                                               builder: (context) => DeliveryConfirmationPage(task: task),
