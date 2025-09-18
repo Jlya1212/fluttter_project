@@ -543,8 +543,12 @@ class _StatusUpdateState extends State<StatusUpdate> {
           );
         }
 
-        final tasks = taskController.allTasks;
-        final filteredTasks = taskController.filteredTasks;
+        final tasks = List<Task>.from(taskController.allTasks)
+          ..sort((a, b) => (b.lastUpdated ?? b.startTime)
+              .compareTo(a.lastUpdated ?? a.startTime));
+        final filteredTasks = List<Task>.from(taskController.filteredTasks)
+          ..sort((a, b) => (b.lastUpdated ?? b.startTime)
+              .compareTo(a.lastUpdated ?? a.startTime));
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -578,31 +582,6 @@ class _StatusUpdateState extends State<StatusUpdate> {
               ],
             ),
             actions: [
-              // Sort popup (same options as schedule page)
-              PopupMenuButton<TaskSort>(
-                tooltip: 'Sort by time',
-                icon: const Icon(Icons.sort, color: Colors.black),
-                initialValue: taskController.sort,
-                onSelected: taskController.setSort,
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: TaskSort.startTimeAsc,
-                    child: Text('Start time ↑ (earliest first)'),
-                  ),
-                  PopupMenuItem(
-                    value: TaskSort.startTimeDesc,
-                    child: Text('Start time ↓ (latest first)'),
-                  ),
-                  PopupMenuItem(
-                    value: TaskSort.deadlineAsc,
-                    child: Text('Deadline ↑ (closest first)'),
-                  ),
-                  PopupMenuItem(
-                    value: TaskSort.deadlineDesc,
-                    child: Text('Deadline ↓ (furthest first)'),
-                  ),
-                ],
-              ),
               // Toggle button for checklist/detailed view
               Container(
                 margin: const EdgeInsets.only(right: 8),
@@ -868,7 +847,11 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                 final TaskStatus optionStatus = _getStatusFromDisplayName(status);
                                 final bool isSelected = task.status == optionStatus;
                                 final IconData icon = _getStatusIcon(optionStatus);
-                                final bool isDisabled = optionStatus.index < task.status.index; // prevent going backwards
+                                // Prevent going backwards AND skipping steps
+                                // Allow current status to remain selected, and only allow next sequential step
+                                final bool isDisabled = task.status == TaskStatus.completed
+                                    ? optionStatus != TaskStatus.completed  // If completed, only completed is enabled
+                                    : optionStatus.index != task.status.index && optionStatus.index != task.status.index + 1;
 
                                 // Dynamic accent color: completed -> green, others -> orange
                                 final Color accentColor = optionStatus == TaskStatus.completed
@@ -882,7 +865,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                       onTap: isDisabled ? null : () async {
                                         final newStatus = _getStatusFromDisplayName(status);
                                         if (newStatus == TaskStatus.inProgress) {
-                                          final selectedTime = await Navigator.push<DateTime>(
+                                          final success = await Navigator.push<bool>(
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) => DeliveryTimePromptPage(
@@ -891,6 +874,20 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                               ),
                                             ),
                                           );
+
+                                          // Show Snackbar feedback for En Route status
+                                          if (success == true) {
+                                            if (!mounted) return;
+                                            final messenger = ScaffoldMessenger.of(this.context);
+                                            messenger.clearSnackBars();
+                                            messenger.showSnackBar(
+                                              SnackBar(
+                                                content: Text('Task moved to En Route'),
+                                                backgroundColor: Colors.green,
+                                                duration: Duration(seconds: 2),
+                                              ),
+                                            );
+                                          }
                                         }
                                         else if (newStatus == TaskStatus.completed) {
                                           final result = await Navigator.of(context).push<Map<String, dynamic>>(
@@ -907,9 +904,28 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                               result['photoFile'],
                                               result['completionTime'],
                                             );
+
+                                            // Show Snackbar feedback for completion
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Task moved to Completed'),
+                                                backgroundColor: Colors.green,
+                                                duration: Duration(seconds: 2),
+                                              ),
+                                            );
                                           }
                                         } else {
                                           await taskController.updateTaskStatus(task.taskCode, newStatus);
+
+                                          // Show Snackbar feedback
+                                          final statusDisplayName = _getStatusDisplayName(newStatus);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Task moved to $statusDisplayName'),
+                                              backgroundColor: Colors.green,
+                                              duration: Duration(seconds: 2),
+                                            ),
+                                          );
                                         }
                                       },
                                       child: Container(

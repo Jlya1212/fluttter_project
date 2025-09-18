@@ -224,7 +224,7 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pop(false);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey[300],
@@ -282,7 +282,7 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
         widget.onDeliveryTimeSelected!(_selectedDeliveryTime!);
       }
 
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
     }
   }
 }
