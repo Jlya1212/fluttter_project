@@ -968,143 +968,186 @@ class _StatusUpdateState extends State<StatusUpdate> {
 
                             const SizedBox(height: 16),
 
-                            // Navigation and Details Buttons (responsive)
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                if (task.status == TaskStatus.inProgress) ...[
-                                  SizedBox(
-                                    width: 200,
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        // Navigate to Virtual Driver Navigation and handle completion result
-                                        final result = await Navigator.push<Map<String, dynamic>>(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => VirtualDriverNavigationPage(task: task),
-                                          ),
-                                        );
-
-                                        if (result != null) {
-                                          await taskController.confirmDelivery(
-                                            task.taskCode,
-                                            result['mechanicSignature'],
-                                            result['deliverySignature'],
-                                            result['photoBase64'],
-                                            result['completionTime'],
+                            // Navigation and Details Buttons
+                            if (task.status == TaskStatus.inProgress)
+                            // Three buttons in a horizontal, scrollable row for En Route
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    // Start Navigation
+                                    SizedBox(
+                                      width: 140,
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          final result = await Navigator.push<Map<String, dynamic>>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => VirtualDriverNavigationPage(task: task),
+                                            ),
                                           );
-                                        }
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.shade600,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.navigation,
-                                              color: Colors.white,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Start Navigation',
-                                              style: TextStyle(
+
+                                          if (result != null) {
+                                            await taskController.confirmDelivery(
+                                              task.taskCode,
+                                              result['mechanicSignature'],
+                                              result['deliverySignature'],
+                                              result['photoBase64'],
+                                              result['completionTime'],
+                                            );
+                                          }
+                                        },
+                                        child: Container(
+                                          margin: const EdgeInsets.only(right: 6),
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.shade600,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.navigation,
                                                 color: Colors.white,
-                                                fontWeight: FontWeight.w500,
+                                                size: 18,
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'Navigate',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  // Edit Timer Button for En Route tasks
-                                  SizedBox(
-                                    width: 200,
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        // Show edit timer dialog
-                                        await DeliveryTimeHelper.showDeliveryTimePrompt(
-                                          context,
-                                          task.taskCode,
-                                          isEditMode: true,
-                                          initialDeliveryTime: task.deliveryTime,
-                                        );
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        decoration: BoxDecoration(
-                                          color: Colors.orange.shade600,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.edit,
-                                              color: Colors.white,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Edit Timer',
-                                              style: TextStyle(
+                                    // Edit Timer
+                                    SizedBox(
+                                      width: 140,
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          await DeliveryTimeHelper.showDeliveryTimePrompt(
+                                            context,
+                                            task.taskCode,
+                                            isEditMode: true,
+                                            initialDeliveryTime: task.deliveryTime,
+                                          );
+                                        },
+                                        child: Container(
+                                          margin: const EdgeInsets.only(right: 6),
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.shade600,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.edit,
                                                 color: Colors.white,
-                                                fontWeight: FontWeight.w500,
+                                                size: 18,
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'Edit Timer',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                                SizedBox(
-                                  width: 200,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      // Navigate to PartRequestDetails page
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PartRequestDetailsPage(task: task),
+                                    // View Full Details
+                                    SizedBox(
+                                      width: 140,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => PartRequestDetailsPage(task: task),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade200,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.visibility,
+                                                color: Colors.grey.shade600,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'View Details',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      );
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade200,
-                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.visibility,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                            // Centered single "View Full Details" button
+                              Container(
+                                margin: const EdgeInsets.only(top: 0),
+                                width: double.infinity,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PartRequestDetailsPage(task: task),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.visibility,
+                                          color: Colors.grey.shade600,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'View Full Details',
+                                          style: TextStyle(
                                             color: Colors.grey.shade600,
-                                            size: 18,
+                                            fontWeight: FontWeight.w500,
                                           ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'View Full Details',
-                                            style: TextStyle(
-                                              color: Colors.grey.shade600,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
                           ],
                         ),
                       ),
