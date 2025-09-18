@@ -891,11 +891,6 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                               ),
                                             ),
                                           );
-
-                                          if (selectedTime != null) {
-                                            await taskController.updateTaskStatus(task.taskCode, TaskStatus.inProgress);
-                                            await taskController.updateTaskDeliveryTime(task.taskCode, selectedTime);
-                                          }
                                         }
                                         else if (newStatus == TaskStatus.completed) {
                                           final result = await Navigator.of(context).push<Map<String, dynamic>>(
