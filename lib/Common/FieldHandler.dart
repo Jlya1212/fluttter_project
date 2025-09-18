@@ -16,8 +16,12 @@ class FieldHandler {
     }
 
     // Additional optional check: must be on/before the required deadline
-    if (requiredDeadline != null && deliveryTime.isAfter(requiredDeadline)) {
-      return 'Delivery time cannot be later than the required deadline';
+    if (requiredDeadline != null) {
+      // Use isAfter with a small tolerance to handle timezone/precision issues
+      final tolerance = Duration(minutes: 1);
+      if (deliveryTime.isAfter(requiredDeadline.add(tolerance))) {
+        return 'Delivery time cannot be later than the required deadline';
+      }
     }
 
     return null; // Valid

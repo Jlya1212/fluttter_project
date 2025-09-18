@@ -800,6 +800,28 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                           ),
                                         ],
                                       ),
+                                      // Show delivery time for En Route tasks
+                                      if (task.status == TaskStatus.inProgress && task.deliveryTime != null) ...[
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.schedule,
+                                              size: 16,
+                                              color: Colors.orange.shade600,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Delivery Time: ${DateFormat('MMM dd, yyyy HH:mm').format(task.deliveryTime!)}',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.orange.shade700,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
@@ -959,6 +981,46 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                             const SizedBox(width: 8),
                                             Text(
                                               'Start Navigation',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Edit Timer Button for En Route tasks
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        // Show edit timer dialog
+                                        await DeliveryTimeHelper.showDeliveryTimePrompt(
+                                          context,
+                                          task.taskCode,
+                                          isEditMode: true,
+                                          initialDeliveryTime: task.deliveryTime,
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.shade600,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.edit,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Edit Timer',
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.w500,
