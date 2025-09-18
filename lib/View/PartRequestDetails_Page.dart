@@ -180,6 +180,18 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
       return; // Do nothing
     }
 
+    // Rule 2: Prevent jumping more than one step ahead
+    if (newStatus.index > task.status.index + 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete the steps in order.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     // If moving from Picked Up to En Route, show the time prompt
     if (task.status == TaskStatus.pickedUp && newStatus == TaskStatus.inProgress) {
       await DeliveryTimeHelper.showDeliveryTimePrompt(context, task.taskCode);
