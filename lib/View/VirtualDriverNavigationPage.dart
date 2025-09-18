@@ -109,13 +109,18 @@ class _VirtualDriverNavigationPageState extends State<VirtualDriverNavigationPag
       ),
     );
 
-    // After dialog is closed, navigate to Delivery Confirmation page
+    // After dialog is closed, navigate to Delivery Confirmation page and bubble result up
     if (mounted) {
-      Navigator.of(context).pushReplacement(
+      final result = await Navigator.of(context).push<Map<String, dynamic>>(
         MaterialPageRoute(
           builder: (context) => DeliveryConfirmationPage(task: widget.task),
         ),
       );
+
+      if (!mounted) return;
+
+      // Return delivered result to the page that opened the virtual navigator
+      Navigator.of(context).pop(result);
     }
   }
 

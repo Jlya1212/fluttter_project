@@ -72,13 +72,23 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          final result = await Navigator.push<Map<String, dynamic>>(
                             context,
                             MaterialPageRoute(
                               builder: (context) => VirtualDriverNavigationPage(task: task),
                             ),
                           );
+
+                          if (result != null) {
+                            await controller.confirmDelivery(
+                              task.taskCode,
+                              result['mechanicSignature'],
+                              result['deliverySignature'],
+                              result['photoBase64'],
+                              result['completionTime'],
+                            );
+                          }
                         },
                         icon: const Icon(Icons.navigation, color: Colors.white),
                         label: const Text(
@@ -155,11 +165,11 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
     );
 
     if (result != null) {
-      controller.confirmDelivery(
+      await controller.confirmDelivery(
         task.taskCode,
         result['mechanicSignature'],
         result['deliverySignature'],
-        result['photoFile'],
+        result['photoBase64'],
         result['completionTime'],
       );
     }

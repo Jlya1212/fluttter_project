@@ -901,7 +901,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                               task.taskCode,
                                               result['mechanicSignature'],
                                               result['deliverySignature'],
-                                              result['photoFile'],
+                                              result['photoBase64'],
                                               result['completionTime'],
                                             );
 
@@ -968,20 +968,33 @@ class _StatusUpdateState extends State<StatusUpdate> {
 
                             const SizedBox(height: 16),
 
-                            // Navigation and Details Buttons
-                            Row(
+                            // Navigation and Details Buttons (responsive)
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
                                 if (task.status == TaskStatus.inProgress) ...[
-                                  Expanded(
+                                  SizedBox(
+                                    width: 200,
                                     child: GestureDetector(
-                                      onTap: () {
-                                        // Navigate to Virtual Driver Navigation
-                                        Navigator.push(
+                                      onTap: () async {
+                                        // Navigate to Virtual Driver Navigation and handle completion result
+                                        final result = await Navigator.push<Map<String, dynamic>>(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => VirtualDriverNavigationPage(task: task),
                                           ),
                                         );
+
+                                        if (result != null) {
+                                          await taskController.confirmDelivery(
+                                            task.taskCode,
+                                            result['mechanicSignature'],
+                                            result['deliverySignature'],
+                                            result['photoBase64'],
+                                            result['completionTime'],
+                                          );
+                                        }
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1010,9 +1023,9 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
                                   // Edit Timer Button for En Route tasks
-                                  Expanded(
+                                  SizedBox(
+                                    width: 200,
                                     child: GestureDetector(
                                       onTap: () async {
                                         // Show edit timer dialog
@@ -1050,9 +1063,9 @@ class _StatusUpdateState extends State<StatusUpdate> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
                                 ],
-                                Expanded(
+                                SizedBox(
+                                  width: 200,
                                   child: GestureDetector(
                                     onTap: () {
                                       // Navigate to PartRequestDetails page

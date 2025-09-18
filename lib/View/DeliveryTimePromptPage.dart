@@ -9,7 +9,7 @@ import '../ViewModel/TaskController.dart';
 class DeliveryTimePromptPage extends StatefulWidget {
   final String taskCode;
   final void Function(DateTime deliveryTime)? onDeliveryTimeSelected;
-  final DateTime? initialDeliveryTime; // 用于编辑模式
+  final DateTime? initialDeliveryTime;
 
   const DeliveryTimePromptPage({
     Key? key,

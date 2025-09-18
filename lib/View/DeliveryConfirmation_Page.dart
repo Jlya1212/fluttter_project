@@ -337,6 +337,8 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
       setState(() {
         _isFinalized = true;
       });
+      // Immediately complete and return, updating status to completed
+      _completeAndReturn();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
