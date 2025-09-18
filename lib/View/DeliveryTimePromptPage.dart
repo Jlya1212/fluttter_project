@@ -89,18 +89,45 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
               ),
               if (requiredDeadline != null) ...[
                 const SizedBox(height: 6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline, size: 16, color: Colors.orange[700]),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Delivery time must not be later than the required deadline: ${_dateFormat.format(requiredDeadline)}',
-                        style: TextStyle(fontSize: 12, color: Colors.orange[800]),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Deadline Information',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue[800],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Latest delivery time: ${_dateFormat.format(requiredDeadline)}',
+                              style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'You can select any time on or before this deadline.',
+                              style: TextStyle(fontSize: 11, color: Colors.blue[600]),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
               SizedBox(height: 12),
@@ -141,20 +168,47 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
                     initialDate: initial,
                   );
                   if (date != null) {
+                    // If the selected date is the deadline date, limit the time picker
+                    TimeOfDay? initialTime;
+                    if (requiredDeadline != null &&
+                        date.year == requiredDeadline.year &&
+                        date.month == requiredDeadline.month &&
+                        date.day == requiredDeadline.day) {
+                      // If selecting the deadline date, set initial time to deadline time
+                      initialTime = TimeOfDay.fromDateTime(requiredDeadline);
+                    } else {
+                      initialTime = TimeOfDay.fromDateTime(initial);
+                    }
+
                     final time = await showTimePicker(
                       context: context,
-                      initialTime: TimeOfDay.fromDateTime(
-                        initial,
-                      ),
+                      initialTime: initialTime,
                     );
-                    return DateTimeField.combine(date, time);
-                  } else {
-                    return currentValue;
+                    if (time != null) {
+                      final selectedDateTime = DateTimeField.combine(date, time);
+                      // Final validation: if this is the deadline date, ensure time is not after deadline
+                      if (requiredDeadline != null &&
+                          selectedDateTime.year == requiredDeadline.year &&
+                          selectedDateTime.month == requiredDeadline.month &&
+                          selectedDateTime.day == requiredDeadline.day &&
+                          selectedDateTime.isAfter(requiredDeadline)) {
+                        // If user selected a time after deadline on deadline date, adjust to deadline
+                        return requiredDeadline;
+                      }
+                      return selectedDateTime;
+                    }
                   }
+                  return currentValue;
                 },
                 onChanged: (DateTime? value) {
                   setState(() {
                     _selectedDeliveryTime = value;
+                  });
+                  // Trigger validation after a short delay to avoid immediate validation errors
+                  Future.delayed(Duration(milliseconds: 100), () {
+                    if (mounted) {
+                      _formKey.currentState?.validate();
+                    }
                   });
                 },
                 validator: (DateTime? value) {
@@ -211,7 +265,24 @@ class _DeliveryTimePromptPageState extends State<DeliveryTimePromptPage> {
 
   void _confirmDeliveryTime(BuildContext context) async {
     if (_formKey.currentState!.validate() && _selectedDeliveryTime != null) {
-      Navigator.of(context).pop(_selectedDeliveryTime);  // 只返回结果
+      final controller = context.read<TaskController>();
+
+      // Check if this is edit mode (initialDeliveryTime is not null)
+      if (widget.initialDeliveryTime != null) {
+        // Edit mode: only update delivery time, don't change status
+        await controller.updateTaskDeliveryTime(widget.taskCode, _selectedDeliveryTime!);
+      } else {
+        // New mode: update status to inProgress and set delivery time
+        await controller.updateTaskStatus(widget.taskCode, TaskStatus.inProgress);
+        await controller.updateTaskDeliveryTime(widget.taskCode, _selectedDeliveryTime!);
+      }
+
+      // Call the callback if provided
+      if (widget.onDeliveryTimeSelected != null) {
+        widget.onDeliveryTimeSelected!(_selectedDeliveryTime!);
+      }
+
+      Navigator.of(context).pop();
     }
   }
 }

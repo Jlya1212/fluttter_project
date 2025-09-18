@@ -226,6 +226,7 @@ class TaskController extends ChangeNotifier {
             mechanicSignature: oldTask.mechanicSignature,
             deliverySignature: oldTask.deliverySignature,
             completionTime: oldTask.completionTime,
+            lastUpdated: DateTime.now(),
             customerName: oldTask.customerName,
             partDetails: oldTask.partDetails,
             destinationAddress: oldTask.destinationAddress,
