@@ -251,7 +251,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isPickedUp ? Colors.green.shade200 : Colors.grey.shade200,
+                    color: isPickedUp ? Colors.grey.shade200 : Colors.green.shade200,
                     width: 1,
                   ),
                   boxShadow: [
@@ -274,10 +274,10 @@ class _StatusUpdateState extends State<StatusUpdate> {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: isPickedUp ? Colors.green : (canPickUp ? Colors.grey.shade300 : Colors.grey.shade200),
+                            color: isPickedUp ? Colors.grey : (canPickUp ? Colors.green : Colors.grey.shade200),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: isPickedUp ? Colors.green : (canPickUp ? Colors.grey.shade400 : Colors.grey.shade300),
+                              color: isPickedUp ? Colors.grey : (canPickUp ? Colors.green : Colors.grey.shade300),
                               width: 2,
                             ),
                           ),
@@ -308,7 +308,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: isPickedUp ? Colors.green.shade700 : Colors.black87,
+                                color: isPickedUp ? Colors.grey.shade700 : Colors.green.shade700,
                                 decoration: isPickedUp ? TextDecoration.lineThrough : null,
                               ),
                             ),
@@ -350,8 +350,8 @@ class _StatusUpdateState extends State<StatusUpdate> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: isPickedUp
-                              ? Colors.green.shade100
-                              : _getStatusColor(task.status).withOpacity(0.1),
+                              ? Colors.grey.shade100
+                              : Colors.green.shade100,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -360,8 +360,8 @@ class _StatusUpdateState extends State<StatusUpdate> {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: isPickedUp
-                                ? Colors.green.shade700
-                                : _getStatusColor(task.status),
+                                ? Colors.grey.shade700
+                                : Colors.green.shade700,
                           ),
                         ),
                       ),
@@ -700,7 +700,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
                   itemBuilder: (context, index) {
                     final task = filteredTasks[index];
 
-                    return Container(
+                    return Container( //task card starts here, not using taskcard.dart like schedule
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade50,
