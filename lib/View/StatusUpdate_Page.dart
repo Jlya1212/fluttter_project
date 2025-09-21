@@ -25,6 +25,7 @@ class _StatusUpdateState extends State<StatusUpdate> {
   late final UserController _userController;
   late User _currentUser;
   Timer? _minuteTicker;
+  Set<String> _excludedFromPickupChecklist = {}; // Track tasks to exclude from pickup checklist
 
   final List<String> statusOptions = ['Pending', 'Picked Up', 'En Route', 'Completed'];
 
@@ -67,6 +68,39 @@ class _StatusUpdateState extends State<StatusUpdate> {
     setState(() {
       _isLoading = false;
     });
+  }
+
+  // Enhanced refresh method that handles pickup checklist logic
+  Future<void> _refreshTasks() async {
+    final taskController = Provider.of<TaskController>(context, listen: false);
+
+    // Preserve the current filter when refreshing
+    final currentFilter = taskController.currentFilter;
+
+    // Reload tasks from Firebase while preserving the current filter
+    await taskController.loadTasksAndSetFilter(currentFilter, _currentUser.username);
+
+    // Add all currently picked up tasks to the exclusion list
+    // This will remove them from the pickup checklist after refresh
+    final pickedUpTasks = taskController.allTasks
+        .where((task) => task.status == TaskStatus.pickedUp)
+        .map((task) => task.taskCode)
+        .toSet();
+
+    setState(() {
+      _excludedFromPickupChecklist.addAll(pickedUpTasks);
+    });
+
+    // Show refresh feedback
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tasks refreshed successfully'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
 
@@ -213,9 +247,10 @@ class _StatusUpdateState extends State<StatusUpdate> {
 
   // Build pickup checklist view with interactive checkboxes
   Widget _buildPickupChecklistView(List<Task> tasks) {
-    // Filter to only show pending and picked up tasks
+    // Filter to only show pending and picked up tasks, excluding those in the exclusion list
     final checklistTasks = tasks.where((task) =>
-    task.status == TaskStatus.pending || task.status == TaskStatus.pickedUp
+    (task.status == TaskStatus.pending || task.status == TaskStatus.pickedUp) &&
+        !_excludedFromPickupChecklist.contains(task.taskCode)
     ).toList();
 
     if (checklistTasks.isEmpty) {
@@ -237,139 +272,144 @@ class _StatusUpdateState extends State<StatusUpdate> {
 
         // Checklist items
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: checklistTasks.length,
-            itemBuilder: (context, index) {
-              final task = checklistTasks[index];
-              final isPickedUp = task.status == TaskStatus.pickedUp;
-              final canPickUp = task.status == TaskStatus.pending; // Only pending tasks can be picked up
+          child: RefreshIndicator(
+            onRefresh: _refreshTasks,
+            color: Colors.orange,
+            backgroundColor: Colors.white,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: checklistTasks.length,
+              itemBuilder: (context, index) {
+                final task = checklistTasks[index];
+                final isPickedUp = task.status == TaskStatus.pickedUp;
+                final canPickUp = task.status == TaskStatus.pending; // Only pending tasks can be picked up
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isPickedUp ? Colors.grey.shade200 : Colors.green.shade200,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.05),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isPickedUp ? Colors.grey.shade200 : Colors.green.shade200,
+                      width: 1,
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      // Interactive Checkbox
-                      GestureDetector(
-                        onTap: canPickUp ? () => _handlePickupTask(task) : null,
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: isPickedUp ? Colors.grey : (canPickUp ? Colors.green : Colors.grey.shade200),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: isPickedUp ? Colors.grey : (canPickUp ? Colors.green : Colors.grey.shade300),
-                              width: 2,
-                            ),
-                          ),
-                          child: isPickedUp
-                              ? const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 16,
-                          )
-                              : canPickUp
-                              ? null
-                              : Icon(
-                            Icons.lock,
-                            color: Colors.grey.shade500,
-                            size: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-
-                      // Task details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task.taskName,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: isPickedUp ? Colors.grey.shade700 : Colors.green.shade700,
-                                decoration: isPickedUp ? TextDecoration.lineThrough : null,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              task.taskCode,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on,
-                                  size: 14,
-                                  color: Colors.grey.shade500,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    '${task.fromLocation} → ${task.toLocation}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Status indicator
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isPickedUp
-                              ? Colors.grey.shade100
-                              : Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _getStatusDisplayName(task.status),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isPickedUp
-                                ? Colors.grey.shade700
-                                : Colors.green.shade700,
-                          ),
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.05),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        // Interactive Checkbox
+                        GestureDetector(
+                          onTap: canPickUp ? () => _handlePickupTask(task) : null,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: isPickedUp ? Colors.grey : (canPickUp ? Colors.green : Colors.grey.shade200),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: isPickedUp ? Colors.grey : (canPickUp ? Colors.green : Colors.grey.shade300),
+                                width: 2,
+                              ),
+                            ),
+                            child: isPickedUp
+                                ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 16,
+                            )
+                                : canPickUp
+                                ? null
+                                : Icon(
+                              Icons.lock,
+                              color: Colors.grey.shade500,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Task details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                task.taskName,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isPickedUp ? Colors.grey.shade700 : Colors.green.shade700,
+                                  decoration: isPickedUp ? TextDecoration.lineThrough : null,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                task.taskCode,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 14,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      '${task.fromLocation} → ${task.toLocation}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Status indicator
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isPickedUp
+                                ? Colors.grey.shade100
+                                : Colors.green.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _getStatusDisplayName(task.status),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isPickedUp
+                                  ? Colors.grey.shade700
+                                  : Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -685,474 +725,484 @@ class _StatusUpdateState extends State<StatusUpdate> {
               // Delivery Items List
               Expanded(
                 child: filteredTasks.isEmpty
-                    ? const Center(
-                  child: Text(
-                    'No deliveries found',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
+                    ? RefreshIndicator(
+                  onRefresh: _refreshTasks,
+                  color: Colors.orange,
+                  backgroundColor: Colors.white,
+                  child: const Center(
+                    child: Text(
+                      'No deliveries found',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
                     ),
                   ),
                 )
-                    : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredTasks.length,
-                  itemBuilder: (context, index) {
-                    final task = filteredTasks[index];
+                    : RefreshIndicator(
+                  onRefresh: _refreshTasks,
+                  color: Colors.orange,
+                  backgroundColor: Colors.white,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = filteredTasks[index];
 
-                    return Container( //task card starts here, not using taskcard.dart like schedule
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Item Header
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        task.taskName,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
+                      return Container( //task card starts here, not using taskcard.dart like schedule
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Item Header
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          task.taskName,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        task.taskCode,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        task.itemDescription,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.location_on,
-                                            size: 16,
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          task.taskCode,
+                                          style: TextStyle(
+                                            fontSize: 14,
                                             color: Colors.grey.shade600,
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            task.toLocation,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.person,
-                                            size: 16,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          task.itemDescription,
+                                          style: TextStyle(
+                                            fontSize: 14,
                                             color: Colors.grey.shade600,
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            task.ownerId,
-                                            style: TextStyle(
-                                              fontSize: 14,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.location_on,
+                                              size: 16,
                                               color: Colors.grey.shade600,
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      // Show delivery time for En Route tasks
-                                      if (task.status == TaskStatus.inProgress && task.deliveryTime != null) ...[
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              task.toLocation,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
                                             Icon(
-                                              Icons.schedule,
+                                              Icons.person,
                                               size: 16,
-                                              color: Colors.orange.shade600,
+                                              color: Colors.grey.shade600,
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Delivery Time: ${DateFormat('MMM dd, yyyy HH:mm').format(task.deliveryTime!)}',
+                                              task.ownerId,
                                               style: TextStyle(
                                                 fontSize: 14,
-                                                color: Colors.orange.shade700,
-                                                fontWeight: FontWeight.w500,
+                                                color: Colors.grey.shade600,
                                               ),
                                             ),
                                           ],
                                         ),
+                                        // Show delivery time for En Route tasks
+                                        if (task.status == TaskStatus.inProgress && task.deliveryTime != null) ...[
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.schedule,
+                                                size: 16,
+                                                color: Colors.orange.shade600,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Delivery Time: ${DateFormat('MMM dd, yyyy HH:mm').format(task.deliveryTime!)}',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.orange.shade700,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        _getStatusDisplayName(task.status),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.orange,
+                                        ),
+                                      ),
+                                      Text(
+                                        _getTimeAgo((task.lastUpdated ?? task.startTime)),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      _getStatusDisplayName(task.status),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange,
-                                      ),
-                                    ),
-                                    Text(
-                                      _getTimeAgo((task.lastUpdated ?? task.startTime)),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Update Status Section
-                            const Text(
-                              'Update Status:',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 12),
 
-                            // Status Buttons + Set Time when transitioning to En Route
-                            Row(
-                              children: statusOptions.map((status) {
-                                final TaskStatus optionStatus = _getStatusFromDisplayName(status);
-                                final bool isSelected = task.status == optionStatus;
-                                final IconData icon = _getStatusIcon(optionStatus);
-                                // Prevent going backwards AND skipping steps
-                                // Allow current status to remain selected, and only allow next sequential step
-                                final bool isDisabled = task.status == TaskStatus.completed
-                                    ? optionStatus != TaskStatus.completed  // If completed, only completed is enabled
-                                    : optionStatus.index != task.status.index && optionStatus.index != task.status.index + 1;
+                              const SizedBox(height: 16),
 
-                                // Dynamic accent color: completed -> green, others -> orange
-                                final Color accentColor = optionStatus == TaskStatus.completed
-                                    ? Colors.green
-                                    : Colors.orange;
+                              // Update Status Section
+                              const Text(
+                                'Update Status:',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
 
-                                return Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: GestureDetector(
-                                      onTap: isDisabled ? null : () async {
-                                        final newStatus = _getStatusFromDisplayName(status);
-                                        if (newStatus == TaskStatus.inProgress) {
-                                          final success = await Navigator.push<bool>(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => DeliveryTimePromptPage(
-                                                taskCode: task.taskCode,
-                                                initialDeliveryTime: task.deliveryTime,
-                                              ),
-                                            ),
-                                          );
+                              // Status Buttons + Set Time when transitioning to En Route
+                              Row(
+                                children: statusOptions.map((status) {
+                                  final TaskStatus optionStatus = _getStatusFromDisplayName(status);
+                                  final bool isSelected = task.status == optionStatus;
+                                  final IconData icon = _getStatusIcon(optionStatus);
+                                  // Prevent going backwards AND skipping steps
+                                  // Allow current status to remain selected, and only allow next sequential step
+                                  final bool isDisabled = task.status == TaskStatus.completed
+                                      ? optionStatus != TaskStatus.completed  // If completed, only completed is enabled
+                                      : optionStatus.index != task.status.index && optionStatus.index != task.status.index + 1;
 
-                                          // Show Snackbar feedback for En Route status
-                                          if (success == true) {
-                                            if (!mounted) return;
-                                            final messenger = ScaffoldMessenger.of(this.context);
-                                            messenger.clearSnackBars();
-                                            messenger.showSnackBar(
-                                              SnackBar(
-                                                content: Text('Task moved to En Route'),
-                                                backgroundColor: Colors.green,
-                                                duration: Duration(seconds: 2),
+                                  // Dynamic accent color: completed -> green, others -> orange
+                                  final Color accentColor = optionStatus == TaskStatus.completed
+                                      ? Colors.green
+                                      : Colors.orange;
+
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: GestureDetector(
+                                        onTap: isDisabled ? null : () async {
+                                          final newStatus = _getStatusFromDisplayName(status);
+                                          if (newStatus == TaskStatus.inProgress) {
+                                            final success = await Navigator.push<bool>(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => DeliveryTimePromptPage(
+                                                  taskCode: task.taskCode,
+                                                  initialDeliveryTime: task.deliveryTime,
+                                                ),
                                               ),
                                             );
+
+                                            // Show Snackbar feedback for En Route status
+                                            if (success == true) {
+                                              if (!mounted) return;
+                                              final messenger = ScaffoldMessenger.of(this.context);
+                                              messenger.clearSnackBars();
+                                              messenger.showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Task moved to En Route'),
+                                                  backgroundColor: Colors.green,
+                                                  duration: Duration(seconds: 2),
+                                                ),
+                                              );
+                                            }
                                           }
-                                        }
-                                        else if (newStatus == TaskStatus.completed) {
-                                          final result = await Navigator.of(context).push<Map<String, dynamic>>(
-                                            MaterialPageRoute(
-                                              builder: (context) => DeliveryConfirmationPage(task: task),
-                                            ),
-                                          );
-
-                                          if (result != null) {
-                                            await taskController.confirmDelivery(
-                                              task.taskCode,
-                                              result['mechanicSignature'],
-                                              result['deliverySignature'],
-                                              result['photoBase64'],
-                                              result['completionTime'],
+                                          else if (newStatus == TaskStatus.completed) {
+                                            final result = await Navigator.of(context).push<Map<String, dynamic>>(
+                                              MaterialPageRoute(
+                                                builder: (context) => DeliveryConfirmationPage(task: task),
+                                              ),
                                             );
 
-                                            // Show Snackbar feedback for completion
+                                            if (result != null) {
+                                              await taskController.confirmDelivery(
+                                                task.taskCode,
+                                                result['mechanicSignature'],
+                                                result['deliverySignature'],
+                                                result['photoBase64'],
+                                                result['completionTime'],
+                                              );
+
+                                              // Show Snackbar feedback for completion
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Task moved to Completed'),
+                                                  backgroundColor: Colors.green,
+                                                  duration: Duration(seconds: 2),
+                                                ),
+                                              );
+                                            }
+                                          } else {
+                                            await taskController.updateTaskStatus(task.taskCode, newStatus);
+
+                                            // Show Snackbar feedback
+                                            final statusDisplayName = _getStatusDisplayName(newStatus);
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text('Task moved to Completed'),
+                                                content: Text('Task moved to $statusDisplayName'),
                                                 backgroundColor: Colors.green,
                                                 duration: Duration(seconds: 2),
                                               ),
                                             );
                                           }
-                                        } else {
-                                          await taskController.updateTaskStatus(task.taskCode, newStatus);
-
-                                          // Show Snackbar feedback
-                                          final statusDisplayName = _getStatusDisplayName(newStatus);
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Task moved to $statusDisplayName'),
-                                              backgroundColor: Colors.green,
-                                              duration: Duration(seconds: 2),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                        decoration: BoxDecoration(
-                                          color: isDisabled
-                                              ? Colors.grey.shade200
-                                              : (isSelected ? Colors.white : Colors.grey.shade100),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(
-                                            color: isDisabled ? Colors.grey.shade300 : (isSelected ? accentColor : Colors.grey.shade300),
-                                            width: isSelected ? 2 : 1,
-                                          ),
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Icon(
-                                              icon,
-                                              color: isDisabled ? Colors.grey.shade400 : (isSelected ? accentColor : Colors.grey.shade600),
-                                              size: 20,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              status,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: isDisabled ? Colors.grey.shade500 : (isSelected ? accentColor : Colors.grey.shade600),
-                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Navigation and Details Buttons
-                            if (task.status == TaskStatus.inProgress)
-                            // Three buttons in a horizontal, scrollable row for En Route
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    // Start Navigation
-                                    SizedBox(
-                                      width: 140,
-                                      child: GestureDetector(
-                                        onTap: () async {
-                                          final result = await Navigator.push<Map<String, dynamic>>(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => VirtualDriverNavigationPage(task: task),
-                                            ),
-                                          );
-
-                                          if (result != null) {
-                                            await taskController.confirmDelivery(
-                                              task.taskCode,
-                                              result['mechanicSignature'],
-                                              result['deliverySignature'],
-                                              result['photoBase64'],
-                                              result['completionTime'],
-                                            );
-                                          }
                                         },
                                         child: Container(
-                                          margin: const EdgeInsets.only(right: 6),
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          padding: const EdgeInsets.symmetric(vertical: 8),
                                           decoration: BoxDecoration(
-                                            color: Colors.blue.shade600,
+                                            color: isDisabled
+                                                ? Colors.grey.shade200
+                                                : (isSelected ? Colors.white : Colors.grey.shade100),
                                             borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: isDisabled ? Colors.grey.shade300 : (isSelected ? accentColor : Colors.grey.shade300),
+                                              width: isSelected ? 2 : 1,
+                                            ),
                                           ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                          child: Column(
                                             children: [
                                               Icon(
-                                                Icons.navigation,
-                                                color: Colors.white,
-                                                size: 18,
+                                                icon,
+                                                color: isDisabled ? Colors.grey.shade400 : (isSelected ? accentColor : Colors.grey.shade600),
+                                                size: 20,
                                               ),
-                                              const SizedBox(width: 6),
+                                              const SizedBox(height: 4),
                                               Text(
-                                                'Navigate',
+                                                status,
                                                 style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 12,
+                                                  color: isDisabled ? Colors.grey.shade500 : (isSelected ? accentColor : Colors.grey.shade600),
+                                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                                 ),
+                                                textAlign: TextAlign.center,
                                               ),
                                             ],
                                           ),
                                         ),
                                       ),
                                     ),
-                                    // Edit Timer
-                                    SizedBox(
-                                      width: 140,
-                                      child: GestureDetector(
-                                        onTap: () async {
-                                          await DeliveryTimeHelper.showDeliveryTimePrompt(
-                                            context,
-                                            task.taskCode,
-                                            isEditMode: true,
-                                            initialDeliveryTime: task.deliveryTime,
-                                          );
-                                        },
-                                        child: Container(
-                                          margin: const EdgeInsets.only(right: 6),
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.orange.shade600,
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.edit,
-                                                color: Colors.white,
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                'Edit Timer',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    // View Full Details
-                                    SizedBox(
-                                      width: 140,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => PartRequestDetailsPage(task: task),
-                                            ),
-                                          );
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade200,
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.visibility,
-                                                color: Colors.grey.shade600,
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                'View Details',
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            else
-                            // Centered single "View Full Details" button
-                              Container(
-                                margin: const EdgeInsets.only(top: 0),
-                                width: double.infinity,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => PartRequestDetailsPage(task: task),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.visibility,
-                                          color: Colors.grey.shade600,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'View Full Details',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                                  );
+                                }).toList(),
                               ),
-                          ],
+
+                              const SizedBox(height: 16),
+
+                              // Navigation and Details Buttons
+                              if (task.status == TaskStatus.inProgress)
+                              // Three buttons in a horizontal, scrollable row for En Route
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      // Start Navigation
+                                      SizedBox(
+                                        width: 140,
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            final result = await Navigator.push<Map<String, dynamic>>(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => VirtualDriverNavigationPage(task: task),
+                                              ),
+                                            );
+
+                                            if (result != null) {
+                                              await taskController.confirmDelivery(
+                                                task.taskCode,
+                                                result['mechanicSignature'],
+                                                result['deliverySignature'],
+                                                result['photoBase64'],
+                                                result['completionTime'],
+                                              );
+                                            }
+                                          },
+                                          child: Container(
+                                            margin: const EdgeInsets.only(right: 6),
+                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue.shade600,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.navigation,
+                                                  color: Colors.white,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  'Navigate',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // Edit Timer
+                                      SizedBox(
+                                        width: 140,
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            await DeliveryTimeHelper.showDeliveryTimePrompt(
+                                              context,
+                                              task.taskCode,
+                                              isEditMode: true,
+                                              initialDeliveryTime: task.deliveryTime,
+                                            );
+                                          },
+                                          child: Container(
+                                            margin: const EdgeInsets.only(right: 6),
+                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.orange.shade600,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.edit,
+                                                  color: Colors.white,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  'Edit Timer',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // View Full Details
+                                      SizedBox(
+                                        width: 140,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => PartRequestDetailsPage(task: task),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade200,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.visibility,
+                                                  color: Colors.grey.shade600,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  'View Details',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade600,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                              // Centered single "View Full Details" button
+                                Container(
+                                  margin: const EdgeInsets.only(top: 0),
+                                  width: double.infinity,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PartRequestDetailsPage(task: task),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.visibility,
+                                            color: Colors.grey.shade600,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'View Full Details',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
