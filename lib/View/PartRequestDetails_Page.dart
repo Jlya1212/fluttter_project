@@ -107,7 +107,7 @@ class _PartRequestDetailsPageState extends State<PartRequestDetailsPage> {
                     const SizedBox(height: 12),
                   ],
 
-                  if (task.status == TaskStatus.pickedUp || task.status == TaskStatus.inProgress)
+                  if (task.status == TaskStatus.inProgress)
                     ElevatedButton.icon(
                       onPressed: () => _handleConfirmation(context, controller, task),
                       icon: const Icon(Icons.check_circle_outline, color: Colors.white),
